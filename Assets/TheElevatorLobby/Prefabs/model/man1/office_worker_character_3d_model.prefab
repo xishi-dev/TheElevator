@@ -64,8 +64,43 @@ PrefabInstance:
       propertyPath: m_Name
       value: office_worker_character_3d_model
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 90a6c8d0712b98f4abcec56d8072a94d, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 90a6c8d0712b98f4abcec56d8072a94d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -689527755678486882}
   m_SourcePrefab: {fileID: 100100000, guid: 90a6c8d0712b98f4abcec56d8072a94d, type: 3}
+--- !u!1 &9156892298574677631 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 90a6c8d0712b98f4abcec56d8072a94d, type: 3}
+  m_PrefabInstance: {fileID: 8345936290260253486}
+  m_PrefabAsset: {fileID: 0}
+--- !u!136 &-689527755678486882
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9156892298574677631}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.44848633
+  m_Height: 0.9995117
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.49975586, z: 0}

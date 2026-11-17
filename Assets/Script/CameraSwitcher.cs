@@ -1,4 +1,5 @@
-   using UnityEngine;
+
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class CameraSwitcher : MonoBehaviour
@@ -7,29 +8,84 @@ public class CameraSwitcher : MonoBehaviour
     public GameObject cameraLobby;
     public GameObject cameraElevator;
 
-    private bool isLobbyView = true;
+    [Header("Settings")]
+    [SerializeField] private bool allowTabToggle = true;
 
-    void Start()
-    {
-        UpdateCamera();
-    }
+    private bool isElevatorView = false;
 
-    void Update()
+    // ตรวจสอบว่ากำลังใช้กล้องลิฟต์หรือไม่
+    public bool IsElevatorView => isElevatorView;
+
+    // กล้องที่กำลังใช้งาน
+    public Camera ActiveCamera
     {
-        if (Keyboard.current != null &&
-            Keyboard.current.tabKey.wasPressedThisFrame)
+        get
         {
-            isLobbyView = !isLobbyView;
-            UpdateCamera();
+            GameObject activeObject =
+                isElevatorView ? cameraElevator : cameraLobby;
+
+            if (activeObject == null)
+                return null;
+
+            Camera cam = activeObject.GetComponent<Camera>();
+
+            if (cam == null)
+                cam = activeObject.GetComponentInChildren<Camera>(true);
+
+            return cam;
         }
     }
 
-    void UpdateCamera()
+    private void Start()
     {
-        if (cameraLobby == null || cameraElevator == null)
-            return;
+        ShowLobby();
+    }
 
-        cameraLobby.SetActive(isLobbyView);
-        cameraElevator.SetActive(!isLobbyView);
+    private void Update()
+    {
+        // Tab ใช้ทดสอบสลับกล้องด้วยตัวเอง
+        if (allowTabToggle &&
+            Keyboard.current != null &&
+            Keyboard.current.tabKey.wasPressedThisFrame)
+        {
+            if (isElevatorView)
+                ShowLobby();
+            else
+                ShowElevator();
+        }
+    }
+
+    // เรียกใช้กล้อง Lobby
+    public void ShowLobby()
+    {
+        isElevatorView = false;
+
+        if (cameraLobby != null)
+            cameraLobby.SetActive(true);
+
+        if (cameraElevator != null)
+            cameraElevator.SetActive(false);
+
+        Debug.Log("Camera: Lobby");
+    }
+
+    // เรียกใช้กล้อง Elevator
+    public void ShowElevator()
+    {
+        isElevatorView = true;
+
+        if (cameraLobby != null)
+            cameraLobby.SetActive(false);
+
+        if (cameraElevator != null)
+            cameraElevator.SetActive(true);
+
+        Debug.Log("Camera: Elevator");
+    }
+
+    // รองรับการเรียกกล้องจาก Script อื่น
+    public Camera GetCurrentCamera()
+    {
+        return ActiveCamera;
     }
 }

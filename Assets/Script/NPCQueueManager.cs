@@ -26,7 +26,10 @@ public class NPCQueueManager : MonoBehaviour
         if (npcPrefabs == null || npcPrefabs.Length == 0 ||
             spawnPoint == null || queueStart == null)
         {
-            Debug.LogError("กรุณากำหนด NPC Prefabs และจุด Spawn/Queue");
+            Debug.LogError(
+                "กรุณากำหนด NPC Prefabs และจุด Spawn/Queue"
+            );
+
             enabled = false;
             return;
         }
@@ -34,10 +37,13 @@ public class NPCQueueManager : MonoBehaviour
         StartCoroutine(SpawnNPCs());
     }
 
+    // ระบบ Spawn NPC อัตโนมัติ
     private IEnumerator SpawnNPCs()
     {
         while (true)
         {
+            npcList.RemoveAll(npc => npc == null);
+
             if (npcList.Count < maxNPCs)
             {
                 CreateNPC();
@@ -47,10 +53,13 @@ public class NPCQueueManager : MonoBehaviour
         }
     }
 
+    // สร้าง NPC
     private void CreateNPC()
     {
-        // สุ่มเลือกโมเดล NPC
-        int randomIndex = Random.Range(0, npcPrefabs.Length);
+        int randomIndex = Random.Range(
+            0,
+            npcPrefabs.Length
+        );
 
         GameObject selectedPrefab = npcPrefabs[randomIndex];
 
@@ -63,7 +72,8 @@ public class NPCQueueManager : MonoBehaviour
             spawnPoint.rotation
         );
 
-        NPCQueueAgent agent = npc.GetComponent<NPCQueueAgent>();
+        NPCQueueAgent agent =
+            npc.GetComponent<NPCQueueAgent>();
 
         if (agent == null)
         {
@@ -80,6 +90,7 @@ public class NPCQueueManager : MonoBehaviour
         UpdateQueuePositions();
     }
 
+    // จัดตำแหน่ง NPC ในแถว
     private void UpdateQueuePositions()
     {
         Vector3 direction = queueDirection.normalized;
@@ -93,6 +104,22 @@ public class NPCQueueManager : MonoBehaviour
                 queueStart.position + direction * spacing * i;
 
             npcList[i].SetTarget(targetPosition);
+        }
+    }
+
+    // นำ NPC ออกจากแถวเมื่อถูกจับ
+    public void RemoveFromQueue(NPCQueueAgent agent)
+    {
+        if (agent == null)
+            return;
+
+        if (npcList.Remove(agent))
+        {
+            agent.LeaveQueue();
+
+            UpdateQueuePositions();
+
+            Debug.Log("NPC ถูกนำออกจาก Queue แล้ว");
         }
     }
 }
