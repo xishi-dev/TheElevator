@@ -1,0 +1,6 @@
+{
+  "name": "TheElevator.RegressionTests",
+  "references": ["Unity.InputSystem"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "autoReferenced": false
+}

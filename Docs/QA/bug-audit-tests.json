@@ -1,0 +1,183 @@
+{
+  "job_id": "5b747c906759418fb101a5fa21402358",
+  "status": "succeeded",
+  "mode": "PlayMode",
+  "started_unix_ms": 1794993035813,
+  "finished_unix_ms": 1794993050036,
+  "last_update_unix_ms": 1794993050036,
+  "progress": {
+    "completed": 16,
+    "total": 16,
+    "current_test_full_name": null,
+    "current_test_started_unix_ms": null,
+    "last_finished_test_full_name": "GameplayRegressionTests.TotalSpawnCapIncludesNPCsRemovedFromQueue",
+    "last_finished_unix_ms": 1794993050006,
+    "stuck_suspected": false,
+    "editor_is_focused": false,
+    "run_in_background": false,
+    "focus_nudge_attempts": null,
+    "focus_nudge_limit": null,
+    "focus_nudge_status": null,
+    "blocked_reason": null,
+    "failures_so_far": [],
+    "failures_capped": false
+  },
+  "error": null,
+  "result": {
+    "mode": "PlayMode",
+    "summary": {
+      "total": 16,
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "durationSeconds": 9.571786,
+      "resultState": "Passed"
+    },
+    "results": [
+      {
+        "name": "AllNineAnimatorsSupportGrabFallLandAndRandomGestures",
+        "fullName": "GameplayRegressionTests.AllNineAnimatorsSupportGrabFallLandAndRandomGestures",
+        "state": "Passed",
+        "durationSeconds": 4.3602388,
+        "message": null,
+        "stackTrace": null,
+        "output": ""
+      },
+      {
+        "name": "AnimatedBoundsContainAllElevenPoses",
+        "fullName": "GameplayRegressionTests.AnimatedBoundsContainAllElevenPoses",
+        "state": "Passed",
+        "durationSeconds": 1.3230092,
+        "message": null,
+        "stackTrace": null,
+        "output": ""
+      },
+      {
+        "name": "DestroyedQueueMembersDoNotLeaveEmptySlots",
+        "fullName": "GameplayRegressionTests.DestroyedQueueMembersDoNotLeaveEmptySlots",
+        "state": "Passed",
+        "durationSeconds": 0.0134567,
+        "message": null,
+        "stackTrace": null,
+        "output": ""
+      },
+      {
+        "name": "DisableAndReenableSpawnerStartsOnlyOneLoop",
+        "fullName": "GameplayRegressionTests.DisableAndReenableSpawnerStartsOnlyOneLoop",
+        "state": "Passed",
+        "durationSeconds": 0.5099728,
+        "message": null,
+        "stackTrace": null,
+        "output": ""
+      },
+      {
+        "name": "DisabledGrabControllerReleasesNPC",
+        "fullName": "GameplayRegressionTests.DisabledGrabControllerReleasesNPC",
+        "state": "Passed",
+        "durationSeconds": 0.2058013,
+        "message": null,
+        "stackTrace": null,
+        "output": "ปล่อยตัวละครแล้ว\r\n"
+      },
+      {
+        "name": "DraggingStopsBeforeWall",
+        "fullName": "GameplayRegressionTests.DraggingStopsBeforeWall",
+        "state": "Passed",
+        "durationSeconds": 0.0083602,
+        "message": null,
+        "stackTrace": null,
+        "output": "ปล่อยตัวละครแล้ว\r\n"
+      },
+      {
+        "name": "GroundContactDoesNotBlockHorizontalDragging",
+        "fullName": "GameplayRegressionTests.GroundContactDoesNotBlockHorizontalDragging",
+        "state": "Passed",
+        "durationSeconds": 0.0022317,
+        "message": null,
+        "stackTrace": null,
+        "output": "ปล่อยตัวละครแล้ว\r\n"
+      },
+      {
+        "name": "ImmediateRegrabAndReleaseCannotRaceOlderDescent",
+        "fullName": "GameplayRegressionTests.ImmediateRegrabAndReleaseCannotRaceOlderDescent",
+        "state": "Passed",
+        "durationSeconds": 0.204685,
+        "message": null,
+        "stackTrace": null,
+        "output": ""
+      },
+      {
+        "name": "LegacyAgentWithoutAnimationStillLands",
+        "fullName": "GameplayRegressionTests.LegacyAgentWithoutAnimationStillLands",
+        "state": "Passed",
+        "durationSeconds": 0.2048249,
+        "message": null,
+        "stackTrace": null,
+        "output": ""
+      },
+      {
+        "name": "LostApplicationFocusReleasesNPC",
+        "fullName": "GameplayRegressionTests.LostApplicationFocusReleasesNPC",
+        "state": "Passed",
+        "durationSeconds": 0.2049125,
+        "message": null,
+        "stackTrace": null,
+        "output": "ปล่อยตัวละครแล้ว\r\n"
+      },
+      {
+        "name": "NPCBehindWallCannotBeSelected",
+        "fullName": "GameplayRegressionTests.NPCBehindWallCannotBeSelected",
+        "state": "Passed",
+        "durationSeconds": 0.0113088,
+        "message": null,
+        "stackTrace": null,
+        "output": "จับตัวละครแล้ว: __Regression_Agent\r\nปล่อยตัวละครแล้ว\r\n"
+      },
+      {
+        "name": "QueueDirectionIgnoresVerticalComponent",
+        "fullName": "GameplayRegressionTests.QueueDirectionIgnoresVerticalComponent",
+        "state": "Passed",
+        "durationSeconds": 0.0024065,
+        "message": null,
+        "stackTrace": null,
+        "output": ""
+      },
+      {
+        "name": "QueueMovementCannotChangeFloorHeight",
+        "fullName": "GameplayRegressionTests.QueueMovementCannotChangeFloorHeight",
+        "state": "Passed",
+        "durationSeconds": 0.2062257,
+        "message": null,
+        "stackTrace": null,
+        "output": ""
+      },
+      {
+        "name": "RegrabWhileFallingPreservesOriginalGround",
+        "fullName": "GameplayRegressionTests.RegrabWhileFallingPreservesOriginalGround",
+        "state": "Passed",
+        "durationSeconds": 0.3549629,
+        "message": null,
+        "stackTrace": null,
+        "output": ""
+      },
+      {
+        "name": "SevenFloorSceneHasValidCollisionsAndUniqueGameplaySystems",
+        "fullName": "GameplayRegressionTests.SevenFloorSceneHasValidCollisionsAndUniqueGameplaySystems",
+        "state": "Passed",
+        "durationSeconds": 1.9232305,
+        "message": null,
+        "stackTrace": null,
+        "output": "Camera: Lobby\r\nCamera: Elevator\r\nCamera: Lobby\r\n"
+      },
+      {
+        "name": "TotalSpawnCapIncludesNPCsRemovedFromQueue",
+        "fullName": "GameplayRegressionTests.TotalSpawnCapIncludesNPCsRemovedFromQueue",
+        "state": "Passed",
+        "durationSeconds": 0.00571,
+        "message": null,
+        "stackTrace": null,
+        "output": ""
+      }
+    ]
+  }
+}

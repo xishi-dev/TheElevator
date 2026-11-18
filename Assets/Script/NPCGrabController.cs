@@ -1,5 +1,4 @@
 
-using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -54,7 +53,10 @@ public class NPCGrabController : MonoBehaviour
     private void Update()
     {
         if (Mouse.current == null)
+        {
+            ReleaseNPC();
             return;
+        }
 
         if (Mouse.current.leftButton.wasPressedThisFrame &&
             grabbedTransform == null)
@@ -74,6 +76,9 @@ public class NPCGrabController : MonoBehaviour
             ReleaseNPC();
         }
     }
+
+    private void OnDisable() { ReleaseNPC(); }
+    private void OnApplicationFocus(bool focused) { if (!focused) ReleaseNPC(); }
 
     // =====================================
     // CAMERA
@@ -154,6 +159,10 @@ public class NPCGrabController : MonoBehaviour
             return;
         }
 
+        // A selectable NPC behind a wall must not be grabbed through that wall.
+        if (Physics.Raycast(ray, out RaycastHit obstruction, hit.distance, obstacleLayers, QueryTriggerInteraction.Ignore))
+            return;
+
         NPCQueueAgent agent =
             hit.collider.GetComponentInParent<NPCQueueAgent>();
 
@@ -181,13 +190,13 @@ public class NPCGrabController : MonoBehaviour
         grabbedTransform = agent.transform;
         grabbedCapsule = capsule;
 
-        originalY = grabbedTransform.position.y;
         scrollOffset = 0f;
 
         scrollDirection = GetElevatorDirection();
 
         // หยุดระบบ Queue
         agent.SetGrabbed(true);
+        originalY = agent.GroundY;
 
         if (queueManager != null)
             queueManager.RemoveFromQueue(agent);
@@ -372,6 +381,16 @@ public class NPCGrabController : MonoBehaviour
 
             // ยังไม่ให้ NPC ขวาง NPC ในระบบทดสอบนี้
             if (hit.collider.GetComponentInParent<NPCQueueAgent>() != null)
+                continue;
+
+            // PhysX reports initial floor overlaps with a synthetic normal opposing
+            // the cast. Ignore colliders entirely below the capsule's feet first.
+            float feetY = Mathf.Min(point1.y, point2.y) - radius;
+            if (hit.collider.bounds.max.y <= feetY + collisionSkin)
+                continue;
+
+            // Floors and tangential contacts must not block horizontal dragging.
+            if (Vector3.Dot(hit.normal, direction) >= -0.001f)
                 continue;
 
             if (hit.distance < nearestDistance)
@@ -563,7 +582,6 @@ public class NPCGrabController : MonoBehaviour
         if (grabbedTransform == null)
             return;
 
-        Transform character = grabbedTransform;
         NPCQueueAgent agent = grabbedAgent;
 
         grabbedTransform = null;
@@ -572,50 +590,9 @@ public class NPCGrabController : MonoBehaviour
 
         // ไม่บังคับกลับ Lobby เพราะต้องการให้กล้อง
         // ค้างอยู่ตามตำแหน่งสุดท้ายของตัวละคร
-        StartCoroutine(
-            LowerNPC(character, agent, originalY)
-        );
+        if (agent != null) agent.ReleaseToGround(lowerSpeed);
 
         Debug.Log("ปล่อยตัวละครแล้ว");
     }
 
-    // =====================================
-    // LOWER NPC
-    // =====================================
-
-    private IEnumerator LowerNPC(
-        Transform character,
-        NPCQueueAgent agent,
-        float groundY)
-    {
-        if (character == null)
-            yield break;
-
-        while (character != null &&
-               Mathf.Abs(character.position.y - groundY) > 0.01f)
-        {
-            Vector3 position = character.position;
-
-            position.y = Mathf.MoveTowards(
-                position.y,
-                groundY,
-                lowerSpeed * Time.deltaTime
-            );
-
-            character.position = position;
-
-            yield return null;
-        }
-
-        if (character != null)
-        {
-            Vector3 position = character.position;
-            position.y = groundY;
-
-            character.position = position;
-        }
-
-        if (agent != null)
-            agent.SetGrabbed(false);
-    }
 }

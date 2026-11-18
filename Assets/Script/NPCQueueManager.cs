@@ -1,4 +1,3 @@
-
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,119 +6,92 @@ public class NPCQueueManager : MonoBehaviour
 {
     [Header("NPC Prefabs")]
     public GameObject[] npcPrefabs;
-
     [Header("Spawn Settings")]
     public Transform spawnPoint;
-    public float spawnInterval = 2f;
-    public int maxNPCs = 10;
-
+    [Min(.1f)] public float spawnInterval = 2f;
+    [Min(1)] public int maxNPCs = 10;
+    [Tooltip("Maximum living NPCs created by this manager, including those removed from the queue.")]
+    [Min(1)] public int maxSpawnedNPCs = 24;
     [Header("Queue Settings")]
     public Transform queueStart;
     public Vector3 queueDirection = Vector3.left;
-    public float spacing = 1.2f;
+    [Min(.1f)] public float spacing = 1.2f;
+    private readonly List<NPCQueueAgent> npcList = new List<NPCQueueAgent>();
+    private readonly List<NPCQueueAgent> spawnedNPCs = new List<NPCQueueAgent>();
+    private Coroutine spawnRoutine;
+    private bool hasStarted;
+    public int QueuedNPCCount { get { Prune(); return npcList.Count; } }
+    public int SpawnedNPCCount { get { Prune(); return spawnedNPCs.Count; } }
 
-    private List<NPCQueueAgent> npcList =
-        new List<NPCQueueAgent>();
-
-    private void Start()
+    private void Start() { hasStarted = true; StartSpawning(); }
+    private void OnEnable() { if (hasStarted) StartSpawning(); }
+    private void OnDisable()
     {
-        if (npcPrefabs == null || npcPrefabs.Length == 0 ||
-            spawnPoint == null || queueStart == null)
+        if (spawnRoutine != null) StopCoroutine(spawnRoutine);
+        spawnRoutine = null;
+    }
+    private void StartSpawning()
+    {
+        if (spawnRoutine != null) return;
+        if (spawnPoint == null || queueStart == null || npcPrefabs == null || System.Array.Find(npcPrefabs, p => p != null) == null)
         {
-            Debug.LogError(
-                "กรุณากำหนด NPC Prefabs และจุด Spawn/Queue"
-            );
-
+            Debug.LogError("Assign a valid NPC prefab, Spawn Point and Queue Start.", this);
             enabled = false;
             return;
         }
-
-        StartCoroutine(SpawnNPCs());
+        spawnRoutine = StartCoroutine(SpawnNPCs());
     }
-
-    // ระบบ Spawn NPC อัตโนมัติ
     private IEnumerator SpawnNPCs()
     {
         while (true)
         {
-            npcList.RemoveAll(npc => npc == null);
-
-            if (npcList.Count < maxNPCs)
-            {
-                CreateNPC();
-            }
-
-            yield return new WaitForSeconds(spawnInterval);
+            TrySpawnNPC();
+            yield return new WaitForSeconds(Mathf.Max(.1f, spawnInterval));
         }
     }
-
-    // สร้าง NPC
-    private void CreateNPC()
+    public bool TrySpawnNPC()
     {
-        int randomIndex = Random.Range(
-            0,
-            npcPrefabs.Length
-        );
-
-        GameObject selectedPrefab = npcPrefabs[randomIndex];
-
-        if (selectedPrefab == null)
-            return;
-
-        GameObject npc = Instantiate(
-            selectedPrefab,
-            spawnPoint.position,
-            spawnPoint.rotation
-        );
-
-        NPCQueueAgent agent =
-            npc.GetComponent<NPCQueueAgent>();
-
-        if (agent == null)
+        Prune();
+        if (spawnPoint == null || queueStart == null || npcPrefabs == null || npcPrefabs.Length == 0 ||
+            npcList.Count >= Mathf.Max(1, maxNPCs) || spawnedNPCs.Count >= Mathf.Max(1, maxSpawnedNPCs)) return false;
+        // Skip missing entries instead of silently losing a random spawn.
+        int start = Random.Range(0, npcPrefabs.Length);
+        GameObject prefab = null;
+        for (int offset = 0; offset < npcPrefabs.Length; offset++)
         {
-            agent = npc.AddComponent<NPCQueueAgent>();
+            prefab = npcPrefabs[(start + offset) % npcPrefabs.Length];
+            if (prefab != null) break;
         }
-
+        if (prefab == null) return false;
+        GameObject npc = Instantiate(prefab, spawnPoint.position, spawnPoint.rotation);
+        NPCQueueAgent agent = npc.GetComponent<NPCQueueAgent>();
+        if (agent == null) agent = npc.AddComponent<NPCQueueAgent>();
+        spawnedNPCs.Add(agent);
         npcList.Add(agent);
-
         UpdateQueuePositions();
+        return true;
     }
-
-    private void Update()
+    private void Update() { UpdateQueuePositions(); }
+    private void Prune()
     {
-        UpdateQueuePositions();
+        npcList.RemoveAll(npc => npc == null || !npc.IsInQueue);
+        spawnedNPCs.RemoveAll(npc => npc == null);
     }
-
-    // จัดตำแหน่ง NPC ในแถว
     private void UpdateQueuePositions()
     {
-        Vector3 direction = queueDirection.normalized;
-
+        Prune();
+        if (queueStart == null) return;
+        Vector3 direction = Vector3.ProjectOnPlane(queueDirection, Vector3.up);
+        direction = direction.sqrMagnitude > .0001f ? direction.normalized : Vector3.left;
         for (int i = 0; i < npcList.Count; i++)
-        {
-            if (npcList[i] == null)
-                continue;
-
-            Vector3 targetPosition =
-                queueStart.position + direction * spacing * i;
-
-            npcList[i].SetTarget(targetPosition);
-        }
+            npcList[i].SetTarget(queueStart.position + direction * Mathf.Max(.1f, spacing) * i);
     }
-
-    // นำ NPC ออกจากแถวเมื่อถูกจับ
     public void RemoveFromQueue(NPCQueueAgent agent)
     {
-        if (agent == null)
-            return;
-
-        if (npcList.Remove(agent))
+        if (agent != null && npcList.Remove(agent))
         {
             agent.LeaveQueue();
-
             UpdateQueuePositions();
-
-            Debug.Log("NPC ถูกนำออกจาก Queue แล้ว");
         }
     }
 }

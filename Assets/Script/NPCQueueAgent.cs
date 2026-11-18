@@ -1,4 +1,3 @@
-
 using UnityEngine;
 
 public class NPCQueueAgent : MonoBehaviour
@@ -6,30 +5,54 @@ public class NPCQueueAgent : MonoBehaviour
     [Header("Movement")]
     public float moveSpeed = 2.5f;
     public float rotateSpeed = 8f;
-
     private Vector3 targetPosition;
-
-    private bool hasTarget = false;
-    private bool isGrabbed = false;
+    private bool hasTarget;
+    private bool isGrabbed;
     private bool isInQueue = true;
+    private bool isLowering;
+    private float groundY;
+    private float loweringSpeed;
+    private NPCCharacterAnimation visuals;
+    public bool IsInQueue => isInQueue;
+    public bool IsGrabbed => isGrabbed;
+    public bool IsLowering => isLowering;
+    public float GroundY => groundY;
 
-    // กำหนดตำแหน่งที่ต้องเดินไป
+    private void Awake()
+    {
+        groundY = transform.position.y;
+        visuals = GetComponent<NPCCharacterAnimation>();
+    }
+
     public void SetTarget(Vector3 position)
     {
-        if (isGrabbed || !isInQueue)
-            return;
-
+        if (isGrabbed || !isInQueue) return;
         targetPosition = position;
         hasTarget = true;
     }
 
-    // หยุดหรือเปิดการควบคุมจากระบบจับ
     public void SetGrabbed(bool grabbed)
     {
+        // Re-grabbing during a descent preserves the original floor height.
+        if (grabbed && !isGrabbed && !isLowering) groundY = transform.position.y;
         isGrabbed = grabbed;
+        isLowering = false;
+        if (visuals == null) visuals = GetComponent<NPCCharacterAnimation>();
+        if (visuals != null)
+        {
+            if (grabbed) visuals.SetHeld(true);
+            else visuals.Land();
+        }
     }
 
-    // ออกจากระบบต่อแถว
+    public void ReleaseToGround(float speed)
+    {
+        if (!isGrabbed && !isLowering) return;
+        isLowering = true;
+        loweringSpeed = Mathf.Max(.1f, speed);
+        if (visuals != null) visuals.BeginFall();
+    }
+
     public void LeaveQueue()
     {
         isInQueue = false;
@@ -38,33 +61,24 @@ public class NPCQueueAgent : MonoBehaviour
 
     private void Update()
     {
-        // ไม่ให้ระบบ Queue ควบคุมตอนถูกจับ
-        if (isGrabbed || !isInQueue || !hasTarget)
-            return;
-
-        Vector3 direction =
-            targetPosition - transform.position;
-
-        direction.y = 0f;
-
-        // เดินไปยังตำแหน่งเป้าหมาย
-        transform.position = Vector3.MoveTowards(
-            transform.position,
-            targetPosition,
-            moveSpeed * Time.deltaTime
-        );
-
-        // หันหน้าไปตามทิศทาง
-        if (direction.sqrMagnitude > 0.01f)
+        // The NPC owns its descent; disabling input cannot strand it mid-air.
+        // A new grab cancels one state instead of racing several coroutines.
+        if (isLowering)
         {
-            Quaternion targetRotation =
-                Quaternion.LookRotation(direction);
-
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                targetRotation,
-                rotateSpeed * Time.deltaTime
-            );
+            Vector3 position = transform.position;
+            position.y = Mathf.MoveTowards(position.y, groundY, loweringSpeed * Time.deltaTime);
+            transform.position = position;
+            if (Mathf.Abs(position.y - groundY) <= .0001f) SetGrabbed(false);
+            return;
         }
+        if (isGrabbed) return;
+        groundY = transform.position.y;
+        if (!isInQueue || !hasTarget) return;
+        Vector3 destination = targetPosition;
+        destination.y = transform.position.y;
+        Vector3 direction = destination - transform.position;
+        transform.position = Vector3.MoveTowards(transform.position, destination, Mathf.Max(0, moveSpeed) * Time.deltaTime);
+        if (direction.sqrMagnitude > .01f)
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Mathf.Max(0, rotateSpeed) * Time.deltaTime);
     }
 }
