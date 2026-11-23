@@ -14407,12 +14407,12 @@ MonoBehaviour:
   contactRange: 0.35
   minVerticalOverlap: 0.3
   scanInterval: 0.4
-  maxSideLean: 8
-  maxFrontLean: 6
-  maxArmFold: 12
+  maxSideLean: 12
+  maxFrontLean: 9
+  maxArmFold: 20
   headCounterLean: 3
   smoothTime: 0.16
-  wobbleDegrees: 1.2
+  wobbleDegrees: 2
   wobbleSpeed: 7
 --- !u!1 &61470280
 GameObject:
