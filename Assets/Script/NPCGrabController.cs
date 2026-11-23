@@ -588,8 +588,6 @@ public class NPCGrabController : MonoBehaviour
         grabbedAgent = null;
         grabbedCapsule = null;
 
-        // ไม่บังคับกลับ Lobby เพราะต้องการให้กล้อง
-        // ค้างอยู่ตามตำแหน่งสุดท้ายของตัวละคร
         if (agent != null) agent.ReleaseToGround(lowerSpeed);
 
         Debug.Log("ปล่อยตัวละครแล้ว");

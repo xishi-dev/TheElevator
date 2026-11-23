@@ -33,7 +33,6 @@ public class NPCQueueAgent : MonoBehaviour
 
     public void SetGrabbed(bool grabbed)
     {
-        // Re-grabbing during a descent preserves the original floor height.
         if (grabbed && !isGrabbed && !isLowering) groundY = transform.position.y;
         isGrabbed = grabbed;
         isLowering = false;
@@ -61,8 +60,6 @@ public class NPCQueueAgent : MonoBehaviour
 
     private void Update()
     {
-        // The NPC owns its descent; disabling input cannot strand it mid-air.
-        // A new grab cancels one state instead of racing several coroutines.
         if (isLowering)
         {
             Vector3 position = transform.position;

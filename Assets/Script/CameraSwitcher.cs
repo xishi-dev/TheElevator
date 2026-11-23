@@ -13,10 +13,8 @@ public class CameraSwitcher : MonoBehaviour
 
     private bool isElevatorView = false;
 
-    // ตรวจสอบว่ากำลังใช้กล้องลิฟต์หรือไม่
     public bool IsElevatorView => isElevatorView;
 
-    // กล้องที่กำลังใช้งาน
     public Camera ActiveCamera
     {
         get
@@ -43,7 +41,6 @@ public class CameraSwitcher : MonoBehaviour
 
     private void Update()
     {
-        // Tab ใช้ทดสอบสลับกล้องด้วยตัวเอง
         if (allowTabToggle &&
             Keyboard.current != null &&
             Keyboard.current.tabKey.wasPressedThisFrame)
@@ -54,8 +51,6 @@ public class CameraSwitcher : MonoBehaviour
                 ShowElevator();
         }
     }
-
-    // เรียกใช้กล้อง Lobby
     public void ShowLobby()
     {
         isElevatorView = false;
@@ -68,8 +63,6 @@ public class CameraSwitcher : MonoBehaviour
 
         Debug.Log("Camera: Lobby");
     }
-
-    // เรียกใช้กล้อง Elevator
     public void ShowElevator()
     {
         isElevatorView = true;
@@ -82,8 +75,6 @@ public class CameraSwitcher : MonoBehaviour
 
         Debug.Log("Camera: Elevator");
     }
-
-    // รองรับการเรียกกล้องจาก Script อื่น
     public Camera GetCurrentCamera()
     {
         return ActiveCamera;
