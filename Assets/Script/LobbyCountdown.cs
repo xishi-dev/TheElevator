@@ -1,36 +1,82 @@
 
-using UnityEngine;
-using UnityEngine.SceneManagement;
+using System;
+using System.Collections;
 using TMPro;
+using UnityEngine;
 
 public class LobbyCountdown : MonoBehaviour
 {
     [Header("Countdown")]
-    public float countdownTime = 10f;
+    public float countdownTime = 30f;
     public TMP_Text countdownText;
 
-    [Header("Next Scene")]
-    public string nextSceneName = "Floor01";
+    public event Action OnCountdownFinished;
 
-    private void Start()
+    private Coroutine timerRoutine;
+    private float remainingTime;
+
+    public bool IsRunning => timerRoutine != null;
+
+    public float RemainingTime => remainingTime;
+
+    private void Awake()
     {
-        StartCoroutine(CountdownRoutine());
+        remainingTime = Mathf.Max(0f, countdownTime);
+        UpdateText();
     }
 
-    private System.Collections.IEnumerator CountdownRoutine()
+    public void StartCountdown(float seconds = -1f)
     {
-        while (countdownTime > 0)
-        {
-            if (countdownText != null)
-                countdownText.text = Mathf.Ceil(countdownTime).ToString();
+        StopCountdown();
 
-            yield return new WaitForSeconds(1f);
-            countdownTime--;
+        remainingTime = seconds > 0f
+            ? seconds
+            : Mathf.Max(0f, countdownTime);
+
+        UpdateText();
+        timerRoutine = StartCoroutine(CountdownRoutine());
+    }
+
+    public void StopCountdown()
+    {
+        if (timerRoutine != null)
+        {
+            StopCoroutine(timerRoutine);
+            timerRoutine = null;
+        }
+    }
+
+    private IEnumerator CountdownRoutine()
+    {
+        while (remainingTime > 0f)
+        {
+            remainingTime = Mathf.Max(
+                0f,
+                remainingTime - Time.deltaTime
+            );
+
+            UpdateText();
+            yield return null;
         }
 
-        if (countdownText != null)
-            countdownText.text = "0";
+        remainingTime = 0f;
+        UpdateText();
 
-        SceneManager.LoadScene(nextSceneName);
+        timerRoutine = null;
+        OnCountdownFinished?.Invoke();
+    }
+
+    private void UpdateText()
+    {
+        if (countdownText != null)
+        {
+            countdownText.text =
+                Mathf.CeilToInt(remainingTime).ToString();
+        }
+    }
+
+    private void OnDisable()
+    {
+        StopCountdown();
     }
 }

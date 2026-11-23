@@ -1286,6 +1286,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4308271}
   m_Mesh: {fileID: 4300000, guid: 2f43a78ed54b1d0429c121c3dfd8e8f2, type: 2}
+--- !u!1 &4485845
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4485846}
+  m_Layer: 0
+  m_Name: Floor03_SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4485846
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4485845}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 7.98, y: 0.07800007, z: 6.217}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 46138051}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4937663
 GameObject:
   m_ObjectHideFlags: 0
@@ -1875,6 +1906,8 @@ Transform:
   - {fileID: 1179749257}
   - {fileID: 1933220843}
   - {fileID: 771320294}
+  - {fileID: 544484357}
+  - {fileID: 320086530}
   m_Father: {fileID: 1225708549}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6938526
@@ -2987,6 +3020,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 11759109}
   m_Mesh: {fileID: 4300000, guid: f248304d68dab8343b9c075702d35ff9, type: 2}
+--- !u!1 &11774524
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 11774525}
+  m_Layer: 0
+  m_Name: Floor05_SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &11774525
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 11774524}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 7.98, y: -0.28, z: 6.217}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 114669219}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &11914988
 GameObject:
   m_ObjectHideFlags: 0
@@ -3564,6 +3628,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 14587095}
+  - component: {fileID: 14587096}
   m_Layer: 0
   m_Name: Elevator_Assembly
   m_TagString: Untagged
@@ -3590,8 +3655,28 @@ Transform:
   - {fileID: 6263246795556625252}
   - {fileID: 2253994802811294769}
   - {fileID: 1762476338}
+  - {fileID: 1864729617}
+  - {fileID: 55384069}
   m_Father: {fileID: 1297961847}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &14587096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 14587094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82bd6ad51327ca948be784a1dc55db3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElevatorDoorController
+  leftDoor: {fileID: 3915167207891164461}
+  rightDoor: {fileID: 6030413324515542793}
+  openDistance: 1.4
+  moveSpeed: 1.5
+  openOnStart: 1
+  allowManualInput: 0
 --- !u!1 &14625068
 GameObject:
   m_ObjectHideFlags: 0
@@ -5768,6 +5853,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 27266965}
   m_Mesh: {fileID: 4300000, guid: ca8fb02068fc3d24298c49e88d71de84, type: 2}
+--- !u!1 &27701760
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 27701761}
+  m_Layer: 0
+  m_Name: Floor05_QueueStart
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &27701761
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 27701760}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.024, y: -0.2800007, z: 6.217}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 114669219}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &28456387
 GameObject:
   m_ObjectHideFlags: 0
@@ -7056,6 +7172,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 32575946}
   m_Mesh: {fileID: 4300000, guid: 1e34a274fb7925048942ffc940ac1c22, type: 2}
+--- !u!1 &33683819
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 33683820}
+  m_Layer: 0
+  m_Name: Floor07_Stop
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &33683820
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 33683819}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.047, y: 31.282, z: 2.921}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 828322740}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &34410191
 GameObject:
   m_ObjectHideFlags: 0
@@ -7796,6 +7943,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 36836345}
+  - component: {fileID: 36836346}
   m_Layer: 0
   m_Name: Elevator_Assembly
   m_TagString: Untagged
@@ -7824,6 +7972,24 @@ Transform:
   - {fileID: 2027672291}
   m_Father: {fileID: 46138051}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &36836346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 36836344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82bd6ad51327ca948be784a1dc55db3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElevatorDoorController
+  leftDoor: {fileID: 419445972}
+  rightDoor: {fileID: 480956381}
+  openDistance: 1.4
+  moveSpeed: 1.5
+  openOnStart: 0
+  allowManualInput: 0
 --- !u!1 &37129025
 GameObject:
   m_ObjectHideFlags: 0
@@ -10233,6 +10399,8 @@ Transform:
   - {fileID: 36836345}
   - {fileID: 1591324214}
   - {fileID: 679426665}
+  - {fileID: 4485846}
+  - {fileID: 490457349}
   m_Father: {fileID: 2036251245}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &46147627
@@ -12690,12 +12858,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 55384068}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2, y: 0, z: -0.47}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1.9959999, y: -0.02000001, z: 6.24}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2101065901}
+  m_Father: {fileID: 14587095}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &55537141
 GameObject:
@@ -23984,6 +24152,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 100724349}
+  - component: {fileID: 100724350}
   m_Layer: 0
   m_Name: Elevator_Assembly
   m_TagString: Untagged
@@ -24012,6 +24181,24 @@ Transform:
   - {fileID: 2003534927}
   m_Father: {fileID: 418975931}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &100724350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100724348}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82bd6ad51327ca948be784a1dc55db3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElevatorDoorController
+  leftDoor: {fileID: 2095089474}
+  rightDoor: {fileID: 465958152}
+  openDistance: 1.4
+  moveSpeed: 1.5
+  openOnStart: 0
+  allowManualInput: 0
 --- !u!1 &101051259
 GameObject:
   m_ObjectHideFlags: 0
@@ -24578,6 +24765,37 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
+--- !u!1 &103448502
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 103448503}
+  m_Layer: 0
+  m_Name: Floor02_SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &103448503
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 103448502}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 7.98, y: 0, z: 6.217}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 492086149}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &103457132
 GameObject:
   m_ObjectHideFlags: 0
@@ -25754,6 +25972,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 109187844}
+  - component: {fileID: 109187845}
   m_Layer: 0
   m_Name: Elevator_Assembly
   m_TagString: Untagged
@@ -25782,6 +26001,24 @@ Transform:
   - {fileID: 1339109930}
   m_Father: {fileID: 114669219}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &109187845
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 109187843}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82bd6ad51327ca948be784a1dc55db3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElevatorDoorController
+  leftDoor: {fileID: 1182680268}
+  rightDoor: {fileID: 12627178}
+  openDistance: 1.4
+  moveSpeed: 1.5
+  openOnStart: 0
+  allowManualInput: 0
 --- !u!1 &109755226
 GameObject:
   m_ObjectHideFlags: 0
@@ -26692,6 +26929,8 @@ Transform:
   - {fileID: 109187844}
   - {fileID: 949013539}
   - {fileID: 804075555}
+  - {fileID: 11774525}
+  - {fileID: 27701761}
   m_Father: {fileID: 477027231}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &115199866
@@ -44366,6 +44605,37 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &191380992
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 191380993}
+  m_Layer: 0
+  m_Name: Floor06_Stop
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &191380993
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 191380992}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.047, y: 26.113, z: 2.921}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 828322740}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &192321909
 GameObject:
   m_ObjectHideFlags: 0
@@ -66013,6 +66283,8 @@ Transform:
   - {fileID: 339224937}
   - {fileID: 1654192569}
   - {fileID: 1546484375}
+  - {fileID: 691624082}
+  - {fileID: 516705092}
   m_Father: {fileID: 1143443004}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &280897205
@@ -77465,6 +77737,37 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &320086529
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 320086530}
+  m_Layer: 0
+  m_Name: Floor07_QueueStart
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &320086530
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 320086529}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.024, y: -0.23999977, z: 6.217}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6913104}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &320107467
 GameObject:
   m_ObjectHideFlags: 0
@@ -80763,6 +81066,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 339224937}
+  - component: {fileID: 339224938}
   m_Layer: 0
   m_Name: Elevator_Assembly
   m_TagString: Untagged
@@ -80791,6 +81095,24 @@ Transform:
   - {fileID: 449471623}
   m_Father: {fileID: 280572766}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &339224938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 339224936}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82bd6ad51327ca948be784a1dc55db3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElevatorDoorController
+  leftDoor: {fileID: 939404488}
+  rightDoor: {fileID: 920195819}
+  openDistance: 1.4
+  moveSpeed: 1.5
+  openOnStart: 0
+  allowManualInput: 0
 --- !u!1 &339830490
 GameObject:
   m_ObjectHideFlags: 0
@@ -85171,7 +85493,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LobbyCountdown
   countdownTime: 45
   countdownText: {fileID: 1772089887}
-  nextSceneName: Floor01
 --- !u!4 &359602533
 Transform:
   m_ObjectHideFlags: 0
@@ -85180,12 +85501,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 359602531}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.91906, y: 0, z: 23.19774}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1323550063}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &359793600
 GameObject:
@@ -100637,6 +100958,8 @@ Transform:
   - {fileID: 100724349}
   - {fileID: 659552598}
   - {fileID: 718398344}
+  - {fileID: 865114714}
+  - {fileID: 673630442}
   m_Father: {fileID: 390026226}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &419166646
@@ -118387,6 +118710,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 489895122}
   m_Mesh: {fileID: 4300000, guid: 4a6f0922dbd377a4f843a78a3cb37bac, type: 2}
+--- !u!1 &490457348
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 490457349}
+  m_Layer: 0
+  m_Name: Floor03_QueueStart
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &490457349
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 490457348}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.024, y: 0.07800007, z: 6.217}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 46138051}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &491059832
 GameObject:
   m_ObjectHideFlags: 0
@@ -118906,6 +119260,8 @@ Transform:
   - {fileID: 1453128124}
   - {fileID: 430002458}
   - {fileID: 51981588}
+  - {fileID: 103448503}
+  - {fileID: 581495557}
   m_Father: {fileID: 985318820}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &492436896
@@ -124513,6 +124869,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 516240209}
   m_Mesh: {fileID: 4300000, guid: 4035f9ac3f51569459c1b101dbb61a52, type: 2}
+--- !u!1 &516705091
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 516705092}
+  m_Layer: 0
+  m_Name: Floor04_QueueStart
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &516705092
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 516705091}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.024, y: 0.06099987, z: 6.217}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 280572766}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &517432111
 GameObject:
   m_ObjectHideFlags: 0
@@ -128564,7 +128951,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1297961847}
+  m_Father: {fileID: 2091825102}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &538871562
 MonoBehaviour:
@@ -129980,6 +130367,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 544223605}
   m_Mesh: {fileID: 4300000, guid: 6c34a6be5f8f4144585761d0bd469822, type: 2}
+--- !u!1 &544484356
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 544484357}
+  m_Layer: 0
+  m_Name: Floor07_SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &544484357
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 544484356}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 7.98, y: -0.24, z: 6.217}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6913104}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &546034102
 GameObject:
   m_ObjectHideFlags: 0
@@ -137721,6 +138139,37 @@ Transform:
   - {fileID: 53077326}
   - {fileID: 163785984}
   m_Father: {fileID: 649700403}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &581495556
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 581495557}
+  m_Layer: 0
+  m_Name: Floor02_QueueStart
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &581495557
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 581495556}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.024, y: 0, z: 6.217}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 492086149}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &581509828
 GameObject:
@@ -150272,6 +150721,94 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 639552442}
   m_Mesh: {fileID: 4300000, guid: f00f80aca7b71da43a303677b472aabb, type: 2}
+--- !u!1 &640195638
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 640195639}
+  - component: {fileID: 640195642}
+  - component: {fileID: 640195641}
+  - component: {fileID: 640195640}
+  m_Layer: 5
+  m_Name: BlackFadePanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &640195639
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 640195638}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1951691192}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!225 &640195640
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 640195638}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
+--- !u!114 &640195641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 640195638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.392}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &640195642
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 640195638}
+  m_CullTransparentMesh: 1
 --- !u!1 &640473474
 GameObject:
   m_ObjectHideFlags: 0
@@ -158626,6 +159163,37 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
+--- !u!1 &673630441
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 673630442}
+  m_Layer: 0
+  m_Name: Floor06_QueueStart
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &673630442
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 673630441}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.024, y: -0.034999847, z: 6.217}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 418975931}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &674104105
 GameObject:
   m_ObjectHideFlags: 0
@@ -163104,6 +163672,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 691509380}
   m_Mesh: {fileID: 4300000, guid: 66f544175c55bdb47995744f7a7176ee, type: 2}
+--- !u!1 &691624081
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 691624082}
+  m_Layer: 0
+  m_Name: Floor04_SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &691624082
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 691624081}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 7.98, y: 0.061, z: 6.217}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 280572766}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &691794714
 GameObject:
   m_ObjectHideFlags: 0
@@ -197524,6 +198123,44 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 828192067}
   m_Mesh: {fileID: 4300000, guid: d96d87fa75f83dc428fc7b0627a0fda8, type: 2}
+--- !u!1 &828322739
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 828322740}
+  m_Layer: 0
+  m_Name: Elevator_Lobby_Main
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &828322740
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 828322739}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.08572, y: -0.02, z: 6.15111}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 973050615}
+  - {fileID: 919265977}
+  - {fileID: 2090355478}
+  - {fileID: 1902063349}
+  - {fileID: 1268286540}
+  - {fileID: 191380993}
+  - {fileID: 33683820}
+  m_Father: {fileID: 1323550063}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &828342357
 GameObject:
   m_ObjectHideFlags: 0
@@ -204655,6 +205292,37 @@ ReflectionProbe:
   m_UseOcclusionCulling: 1
   m_Importance: 1
   m_CustomBakedTexture: {fileID: 8900000, guid: 137fdc99ba89bf048a06e7fdfbbf81cb, type: 3}
+--- !u!1 &865114713
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 865114714}
+  m_Layer: 0
+  m_Name: Floor06_SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &865114714
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 865114713}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 7.98, y: -0.035, z: 6.217}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 418975931}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &867122856
 GameObject:
   m_ObjectHideFlags: 0
@@ -217287,6 +217955,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 919223636}
   m_Mesh: {fileID: 4300000, guid: 88e906306cbfe3e47a0106536d96c47a, type: 2}
+--- !u!1 &919265976
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 919265977}
+  m_Layer: 0
+  m_Name: Floor02_Stop
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &919265977
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919265976}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.047, y: 5.403, z: 2.921}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 828322740}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &919502490
 GameObject:
   m_ObjectHideFlags: 0
@@ -229249,6 +229948,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 972230447}
   m_Mesh: {fileID: 4300000, guid: 3c96068c28c4dea45ba50933dbd2b783, type: 2}
+--- !u!1 &973050614
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 973050615}
+  m_Layer: 0
+  m_Name: Floor01_Stop
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &973050615
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 973050614}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.047, y: 0.019, z: 2.921}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 828322740}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &973136390
 GameObject:
   m_ObjectHideFlags: 0
@@ -251971,7 +252701,7 @@ Transform:
   m_LocalScale: {x: 2.8645363, y: 3.0874934, z: 3.067134}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1297961847}
+  m_Father: {fileID: 2091825102}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &1073296774
 BoxCollider:
@@ -274423,6 +275153,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1179749257}
+  - component: {fileID: 1179749258}
   m_Layer: 0
   m_Name: Elevator_Assembly
   m_TagString: Untagged
@@ -274451,6 +275182,24 @@ Transform:
   - {fileID: 205612510}
   m_Father: {fileID: 6913104}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1179749258
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1179749256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82bd6ad51327ca948be784a1dc55db3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElevatorDoorController
+  leftDoor: {fileID: 965537298}
+  rightDoor: {fileID: 1841676295}
+  openDistance: 1.4
+  moveSpeed: 1.5
+  openOnStart: 0
+  allowManualInput: 0
 --- !u!1 &1180406508
 GameObject:
   m_ObjectHideFlags: 0
@@ -284063,7 +284812,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1297961847}
+  m_Father: {fileID: 2091825102}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1224814113
 GameObject:
@@ -293522,6 +294271,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1268283225}
   m_Mesh: {fileID: 4300000, guid: d1c6815b3c932a2468cd2d02cc71a697, type: 2}
+--- !u!1 &1268286539
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1268286540}
+  m_Layer: 0
+  m_Name: Floor05_Stop
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1268286540
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1268286539}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.047, y: 20.823, z: 2.921}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 828322740}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1268470573
 GameObject:
   m_ObjectHideFlags: 0
@@ -300412,13 +301192,6 @@ Transform:
   - {fileID: 14587095}
   - {fileID: 1631126966}
   - {fileID: 2031180413}
-  - {fileID: 1224222838}
-  - {fileID: 2103264889}
-  - {fileID: 1821910197}
-  - {fileID: 1501782580}
-  - {fileID: 538871561}
-  - {fileID: 1073296773}
-  - {fileID: 2026538723}
   m_Father: {fileID: 611227793}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1298476759
@@ -306598,6 +307371,11 @@ Transform:
   - {fileID: 477027231}
   - {fileID: 390026226}
   - {fileID: 1225708549}
+  - {fileID: 828322740}
+  - {fileID: 2091825102}
+  - {fileID: 359602533}
+  - {fileID: 1895708518}
+  - {fileID: 2101065901}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1323895814
@@ -336842,6 +337620,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1453128124}
+  - component: {fileID: 1453128125}
   m_Layer: 0
   m_Name: Elevator_Assembly
   m_TagString: Untagged
@@ -336870,6 +337649,24 @@ Transform:
   - {fileID: 811870888}
   m_Father: {fileID: 492086149}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1453128125
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1453128123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82bd6ad51327ca948be784a1dc55db3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElevatorDoorController
+  leftDoor: {fileID: 651185967}
+  rightDoor: {fileID: 940571292}
+  openDistance: 1.4
+  moveSpeed: 1.5
+  openOnStart: 0
+  allowManualInput: 0
 --- !u!1 &1453162362
 GameObject:
   m_ObjectHideFlags: 0
@@ -349559,55 +350356,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1501629143}
   m_Mesh: {fileID: 4300000, guid: 4bfd3c4b8205ee7438478c1cd95e1bf4, type: 2}
---- !u!1 &1501782579
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1501782580}
-  - component: {fileID: 1501782581}
-  m_Layer: 0
-  m_Name: ElevatorDoorManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1501782580
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1501782579}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.01304, y: 1.67772, z: 7.453}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1297961847}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1501782581
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1501782579}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 82bd6ad51327ca948be784a1dc55db3d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ElevatorDoorController
-  leftDoor: {fileID: 3915167207891164461}
-  rightDoor: {fileID: 6030413324515542793}
-  openDistance: 1.4
-  moveSpeed: 1.5
-  openOnStart: 1
 --- !u!1 &1501945165
 GameObject:
   m_ObjectHideFlags: 0
@@ -403887,7 +404635,7 @@ Transform:
   m_GameObject: {fileID: 1737370229}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 6.35}
+  m_LocalPosition: {x: 0, y: 0, z: 6.232}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -425622,7 +426370,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1297961847}
+  m_Father: {fileID: 2091825102}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1821910198
 MonoBehaviour:
@@ -435510,12 +436258,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1864729616}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8.58, y: 0, z: -0.05}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 8.575999, y: -0.02000001, z: 6.66}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2101065901}
+  m_Father: {fileID: 14587095}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1864893950
 GameObject:
@@ -442858,8 +443606,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1895708518}
+  - component: {fileID: 1895708519}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: FloorProgressionManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -442873,13 +443622,81 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1895708517}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.91906, y: 0, z: 23.19774}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.91906, y: 0.109, z: 0.81899977}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1323550063}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1895708519
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1895708517}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74300a675c41142468795d48e1fffd30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FloorProgressionManager
+  floors:
+  - floorName: Floor_01
+    stopPoint: {fileID: 973050615}
+    doorController: {fileID: 14587096}
+    spawnPoint: {fileID: 1864729617}
+    queueStart: {fileID: 55384069}
+    roundSeconds: 10
+  - floorName: Floor_02
+    stopPoint: {fileID: 919265977}
+    doorController: {fileID: 1453128125}
+    spawnPoint: {fileID: 103448503}
+    queueStart: {fileID: 581495557}
+    roundSeconds: 10
+  - floorName: Floor_03
+    stopPoint: {fileID: 2090355478}
+    doorController: {fileID: 36836346}
+    spawnPoint: {fileID: 4485846}
+    queueStart: {fileID: 490457349}
+    roundSeconds: 10
+  - floorName: Floor_04
+    stopPoint: {fileID: 1902063349}
+    doorController: {fileID: 339224938}
+    spawnPoint: {fileID: 691624082}
+    queueStart: {fileID: 516705092}
+    roundSeconds: 10
+  - floorName: Floor_05
+    stopPoint: {fileID: 1268286540}
+    doorController: {fileID: 109187845}
+    spawnPoint: {fileID: 11774525}
+    queueStart: {fileID: 27701761}
+    roundSeconds: 10
+  - floorName: Floor_06
+    stopPoint: {fileID: 191380993}
+    doorController: {fileID: 100724350}
+    spawnPoint: {fileID: 865114714}
+    queueStart: {fileID: 673630442}
+    roundSeconds: 10
+  - floorName: Floor_07
+    stopPoint: {fileID: 33683820}
+    doorController: {fileID: 1179749258}
+    spawnPoint: {fileID: 544484357}
+    queueStart: {fileID: 320086530}
+    roundSeconds: 10
+  countdown: {fileID: 359602532}
+  cameraSwitcher: {fileID: 1821910198}
+  grabController: {fileID: 538871562}
+  queueManager: {fileID: 2101065902}
+  elevatorZone: {fileID: 1073296774}
+  elevatorMoveDirection: {fileID: 2026538723}
+  extraMovingObjects: []
+  travelDuration: 2
+  fadeDuration: 0.4
+  blackFade: {fileID: 640195640}
+  currentFloorText: {fileID: 0}
+  finishPanel: {fileID: 0}
+  finishText: {fileID: 0}
 --- !u!1 &1895772919
 GameObject:
   m_ObjectHideFlags: 0
@@ -444158,6 +444975,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1901999336}
   m_Mesh: {fileID: 4300000, guid: c02c3f6ada740934384c89502743d957, type: 2}
+--- !u!1 &1902063348
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1902063349}
+  m_Layer: 0
+  m_Name: Floor04_Stop
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1902063349
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1902063348}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.047, y: 15.722, z: 2.921}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 828322740}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1902073036
 GameObject:
   m_ObjectHideFlags: 0
@@ -455352,6 +456200,7 @@ RectTransform:
   m_Children:
   - {fileID: 1772089886}
   - {fileID: 1773534177}
+  - {fileID: 640195639}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -471342,7 +472191,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1297961847}
+  m_Father: {fileID: 2091825102}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2026676938
 GameObject:
@@ -488530,6 +489379,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2088889473}
   m_Mesh: {fileID: 4300000, guid: c6376f9d24c347646aba6c4cbe74a521, type: 2}
+--- !u!1 &2090355477
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2090355478}
+  m_Layer: 0
+  m_Name: Floor03_Stop
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2090355478
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2090355477}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.047, y: 10.452, z: 2.921}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 828322740}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2090393483
 GameObject:
   m_ObjectHideFlags: 0
@@ -489092,6 +489972,43 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2091689615}
   m_Mesh: {fileID: 4300000, guid: dfdbbd22f2096af489c6075fe6d3797f, type: 2}
+--- !u!1 &2091825101
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2091825102}
+  m_Layer: 0
+  m_Name: GameplaySystems
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2091825102
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2091825101}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1224222838}
+  - {fileID: 2103264889}
+  - {fileID: 1821910197}
+  - {fileID: 538871561}
+  - {fileID: 1073296773}
+  - {fileID: 2026538723}
+  m_Father: {fileID: 1323550063}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2092249755
 GameObject:
   m_ObjectHideFlags: 0
@@ -491541,14 +492458,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2101065900}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.004, y: -0.02, z: 6.71}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.0040000007, y: -0.02000001, z: 6.71}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1864729617}
-  - {fileID: 55384069}
-  m_Father: {fileID: 0}
+  m_Children: []
+  m_Father: {fileID: 1323550063}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2101065902
 MonoBehaviour:
@@ -492475,7 +493390,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1297961847}
+  m_Father: {fileID: 2091825102}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2103264890
 MonoBehaviour:
@@ -506748,9 +507663,6 @@ PrefabInstance:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 2101065901}
   - {fileID: 1323550063}
-  - {fileID: 359602533}
-  - {fileID: 1895708518}
   - {fileID: 1951691192}
   - {fileID: 797555674}
