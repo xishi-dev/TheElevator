@@ -23,6 +23,7 @@ public class ElevatorDoorController : MonoBehaviour
     private bool initialized;
 
     public bool IsOpen => isOpen;
+    public bool PlayMotionSound { get; set; }
 
     public bool IsFullyClosed =>
         initialized &&
@@ -107,14 +108,16 @@ public class ElevatorDoorController : MonoBehaviour
 
     public void OpenDoors()
     {
-        if (initialized)
-            isOpen = true;
+        if (!initialized || isOpen) return;
+        isOpen = true;
+        if (PlayMotionSound) ShiftAudio.Play(ShiftCue.DoorOpen);
     }
 
     public void CloseDoors()
     {
-        if (initialized)
-            isOpen = false;
+        if (!initialized || !isOpen) return;
+        isOpen = false;
+        if (PlayMotionSound) ShiftAudio.Play(ShiftCue.DoorClose);
     }
 
     public void SetManualInputEnabled(bool allowed)

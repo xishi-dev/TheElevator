@@ -17,6 +17,17 @@ public class NPCQueueAgent : MonoBehaviour
     public bool IsGrabbed => isGrabbed;
     public bool IsLowering => isLowering;
     public float GroundY => groundY;
+    public bool IsDelivered { get; private set; }
+
+    public void MarkDelivered(Vector3 destination)
+    {
+        IsDelivered = true;
+        isInQueue = false;
+        hasTarget = true;
+        targetPosition = destination;
+        moveSpeed = 2.5f;
+        Destroy(gameObject, 2.5f);
+    }
 
     private void Awake()
     {
@@ -65,12 +76,20 @@ public class NPCQueueAgent : MonoBehaviour
             Vector3 position = transform.position;
             position.y = Mathf.MoveTowards(position.y, groundY, loweringSpeed * Time.deltaTime);
             transform.position = position;
-            if (Mathf.Abs(position.y - groundY) <= .0001f) SetGrabbed(false);
+            if (Mathf.Abs(position.y - groundY) <= .0001f)
+            {
+                SetGrabbed(false);
+                if (TryGetComponent(out PassengerRagdoll ragdoll))
+                {
+                    ragdoll.Jolt(-transform.up, .45f);
+                    ShiftAudio.Play(ShiftCue.Land);
+                }
+            }
             return;
         }
         if (isGrabbed) return;
         groundY = transform.position.y;
-        if (!isInQueue || !hasTarget) return;
+        if ((!isInQueue && !IsDelivered) || !hasTarget) return;
         Vector3 destination = targetPosition;
         destination.y = transform.position.y;
         Vector3 direction = destination - transform.position;

@@ -27,6 +27,38 @@ public class NPCQueueManager : MonoBehaviour
 
     private Coroutine spawnRoutine;
     private bool hasStarted;
+    private bool missionMode;
+    private int missionSpawnLimit;
+    private int priorityArrival;
+    private uint missionLighting = 1;
+    public int MissionSpawned { get; private set; }
+    public NPCQueueAgent PriorityPassenger { get; private set; }
+    public IReadOnlyList<NPCQueueAgent> SpawnedAgents => spawnedNPCs;
+
+    public void SetMissionLighting(uint mask)
+    {
+        missionLighting = mask;
+        foreach (var agent in spawnedNPCs)
+            if (agent != null) SetLighting(agent.gameObject);
+    }
+
+    private void SetLighting(GameObject npc)
+    {
+        foreach (var renderer in npc.GetComponentsInChildren<Renderer>())
+            renderer.renderingLayerMask = missionLighting;
+    }
+
+    public void PrepareMission(int amount, float seconds)
+    {
+        StopSpawning();
+        missionMode = true;
+        missionSpawnLimit = Mathf.Max(0, amount);
+        MissionSpawned = 0;
+        PriorityPassenger = null;
+        priorityArrival = Random.Range(1, Mathf.Min(missionSpawnLimit, 5) + 1);
+        spawnInterval = Mathf.Max(.1f, seconds * .78f / Mathf.Max(1, amount - 5));
+        if (hasStarted && isActiveAndEnabled) StartSpawning();
+    }
 
     public int QueuedNPCCount
     {
@@ -60,6 +92,11 @@ public class NPCQueueManager : MonoBehaviour
 
     private void OnDisable()
     {
+        StopSpawning();
+    }
+
+    private void StopSpawning()
+    {
         if (spawnRoutine != null)
         {
             StopCoroutine(spawnRoutine);
@@ -89,7 +126,13 @@ public class NPCQueueManager : MonoBehaviour
 
     private IEnumerator SpawnNPCs()
     {
-        while (true)
+        if (missionMode)
+        {
+            int initial = Mathf.Min(5, missionSpawnLimit);
+            for (int i = 0; i < initial; i++)
+                if (!TrySpawnNPC()) break;
+        }
+        while (!missionMode || MissionSpawned < missionSpawnLimit)
         {
             TrySpawnNPC();
 
@@ -107,8 +150,8 @@ public class NPCQueueManager : MonoBehaviour
             queueStart == null ||
             npcPrefabs == null ||
             npcPrefabs.Length == 0 ||
-            npcList.Count >= maxNPCs ||
-            spawnedNPCs.Count >= maxSpawnedNPCs)
+            (missionMode ? MissionSpawned >= missionSpawnLimit
+                : npcList.Count >= maxNPCs || spawnedNPCs.Count >= maxSpawnedNPCs))
         {
             return false;
         }
@@ -131,17 +174,33 @@ public class NPCQueueManager : MonoBehaviour
         if (selectedPrefab == null)
             return false;
 
-        GameObject npc = Instantiate(
-            selectedPrefab,
-            spawnPoint.position,
-            spawnPoint.rotation
-        );
+        Vector3 position = spawnPoint.position;
+        if (missionMode)
+        {
+            int lane = npcList.Count % 5;
+            int row = npcList.Count / 5;
+            position = MissionSlot(lane, row);
+        }
+        Quaternion facing = spawnPoint.rotation;
+        Vector3 toLobby = Vector3.ProjectOnPlane(queueStart.position - spawnPoint.position, Vector3.up);
+        if (missionMode && toLobby.sqrMagnitude > .01f) facing = Quaternion.LookRotation(toLobby);
+        GameObject npc = Instantiate(selectedPrefab, position, facing);
+        if (npc.scene != gameObject.scene)
+            UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(npc, gameObject.scene);
 
         NPCQueueAgent agent =
             npc.GetComponent<NPCQueueAgent>();
 
         if (agent == null)
             agent = npc.AddComponent<NPCQueueAgent>();
+        if (missionMode)
+        {
+            MissionSpawned++;
+            if (MissionSpawned == priorityArrival) PriorityPassenger = agent;
+            agent.moveSpeed = Mathf.Max(agent.moveSpeed, 4.5f);
+            agent.gameObject.AddComponent<PassengerRagdoll>();
+            SetLighting(npc);
+        }
 
         spawnedNPCs.Add(agent);
         npcList.Add(agent);
@@ -182,11 +241,19 @@ public class NPCQueueManager : MonoBehaviour
 
         for (int i = 0; i < npcList.Count; i++)
         {
-            npcList[i].SetTarget(
-                queueStart.position +
-                direction * Mathf.Max(0.1f, spacing) * i
-            );
+            Vector3 slot = missionMode
+                ? MissionSlot(i % 5, i / 5)
+                : queueStart.position + direction * Mathf.Max(.1f, spacing) * i;
+            npcList[i].SetTarget(slot);
         }
+    }
+
+    private Vector3 MissionSlot(int column, int row)
+    {
+        Vector3 along = Vector3.ProjectOnPlane(spawnPoint.position - queueStart.position, Vector3.up);
+        along = along.sqrMagnitude > .01f ? along.normalized : Vector3.right;
+        Vector3 intoLobby = Vector3.Cross(Vector3.up, along);
+        return queueStart.position + along * (column * .99f) + intoLobby * (row * .88f);
     }
 
     public void RemoveFromQueue(NPCQueueAgent agent)
@@ -227,6 +294,7 @@ public class NPCQueueManager : MonoBehaviour
 
         npcList.Clear();
         spawnedNPCs.Clear();
+        if (passengers != null) spawnedNPCs.AddRange(passengers);
 
         spawnPoint = newSpawnPoint;
         queueStart = newQueueStart;

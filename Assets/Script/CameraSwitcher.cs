@@ -14,6 +14,8 @@ public class CameraSwitcher : MonoBehaviour
     private bool isElevatorView = false;
 
     public bool IsElevatorView => isElevatorView;
+    public bool AllowManualSwitch { get; set; } = true;
+    public System.Func<bool> CanChangeView { get; set; }
 
     public Camera ActiveCamera
     {
@@ -44,12 +46,14 @@ public class CameraSwitcher : MonoBehaviour
         if (allowTabToggle &&
             Keyboard.current != null &&
             Keyboard.current.tabKey.wasPressedThisFrame)
-        {
-            if (isElevatorView)
-                ShowLobby();
-            else
-                ShowElevator();
-        }
+            TryToggle();
+    }
+
+    public void TryToggle()
+    {
+        if (!AllowManualSwitch || (CanChangeView != null && !CanChangeView())) return;
+        if (isElevatorView) ShowLobby();
+        else ShowElevator();
     }
     public void ShowLobby()
     {
@@ -61,7 +65,6 @@ public class CameraSwitcher : MonoBehaviour
         if (cameraElevator != null)
             cameraElevator.SetActive(false);
 
-        Debug.Log("Camera: Lobby");
     }
     public void ShowElevator()
     {
@@ -73,7 +76,6 @@ public class CameraSwitcher : MonoBehaviour
         if (cameraElevator != null)
             cameraElevator.SetActive(true);
 
-        Debug.Log("Camera: Elevator");
     }
     public Camera GetCurrentCamera()
     {

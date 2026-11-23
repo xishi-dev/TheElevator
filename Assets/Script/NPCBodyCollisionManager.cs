@@ -31,6 +31,9 @@ public class NPCBodyCollisionManager : MonoBehaviour
         new List<NPCBody>();
 
     private float nextScanTime;
+    private readonly RaycastHit[] wallHits = new RaycastHit[32];
+    private BoxCollider cabin;
+    public void ConfigureCabin(BoxCollider zone) => cabin = zone;
 
     private void OnEnable()
     {
@@ -69,6 +72,7 @@ public class NPCBodyCollisionManager : MonoBehaviour
                 }
             }
         }
+        Physics.SyncTransforms();
     }
     private void ScanNPCs()
     {
@@ -139,8 +143,10 @@ public class NPCBodyCollisionManager : MonoBehaviour
 
         float distance = difference.magnitude;
 
-        float radiusA = GetRadius(a.capsule);
-        float radiusB = GetRadius(b.capsule);
+        bool inCabin = cabin != null && cabin.bounds.Contains(centerA) && cabin.bounds.Contains(centerB);
+        float compression = inCabin ? .72f : 1f;
+        float radiusA = GetRadius(a.capsule) * compression;
+        float radiusB = GetRadius(b.capsule) * compression;
 
         float requiredDistance =
             radiusA + radiusB + extraSpacing;
@@ -159,6 +165,12 @@ public class NPCBodyCollisionManager : MonoBehaviour
             direction = Vector3.right;
         }
         float overlap = requiredDistance - distance;
+        if (overlap > .07f && (a.agent.IsGrabbed || b.agent.IsGrabbed))
+        {
+            if (a.agent.TryGetComponent(out PassengerRagdoll first)) first.Jolt(-direction, overlap * 2f);
+            if (b.agent.TryGetComponent(out PassengerRagdoll second)) second.Jolt(direction, overlap * 2f);
+            ShiftAudio.Play(ShiftCue.Bump);
+        }
 
         if (a.agent.IsGrabbed &&
             !b.agent.IsGrabbed)
@@ -271,8 +283,6 @@ public class NPCBodyCollisionManager : MonoBehaviour
 
         if (wallLayers.value != 0)
         {
-            Physics.SyncTransforms();
-
             GetWorldCapsule(
                 body.capsule,
                 out Vector3 point1,
@@ -280,22 +290,15 @@ public class NPCBodyCollisionManager : MonoBehaviour
                 out float radius
             );
 
-            // หยุดก่อนชนกำแพง
-            if (Physics.CapsuleCast(
-                point1,
-                point2,
-                radius,
-                direction,
-                out RaycastHit hit,
-                allowed + wallSkin,
-                wallLayers,
-                QueryTriggerInteraction.Ignore))
+            float feet = Mathf.Min(point1.y, point2.y) - radius;
+            int count = Physics.CapsuleCastNonAlloc(point1, point2, radius, direction, wallHits,
+                allowed + wallSkin, wallLayers, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
             {
-                allowed = Mathf.Clamp(
-                    hit.distance - wallSkin,
-                    0f,
-                    allowed
-                );
+                RaycastHit hit = wallHits[i];
+                if (hit.collider == null || hit.collider.bounds.max.y <= feet + wallSkin ||
+                    Vector3.Dot(hit.normal, direction) >= -.001f) continue;
+                allowed = Mathf.Clamp(hit.distance - wallSkin, 0f, allowed);
             }
         }
 
@@ -304,8 +307,6 @@ public class NPCBodyCollisionManager : MonoBehaviour
 
         body.agent.transform.position +=
             direction * allowed;
-
-        Physics.SyncTransforms();
 
         return allowed;
     }

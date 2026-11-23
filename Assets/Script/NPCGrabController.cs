@@ -1,5 +1,6 @@
 
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class NPCGrabController : MonoBehaviour
@@ -10,7 +11,6 @@ public class NPCGrabController : MonoBehaviour
     [SerializeField] private NPCQueueManager queueManager;
 
     [Header("Elevator")]
-    [SerializeField] private BoxCollider elevatorZone;
     [SerializeField] private Transform elevatorMoveDirection;
 
     [Header("Layers")]
@@ -45,6 +45,17 @@ public class NPCGrabController : MonoBehaviour
     private float scrollOffset;
 
     private bool warnedMissingWallLayer = false;
+    public bool HasPassenger => grabbedAgent != null;
+    public NPCQueueAgent HeldPassenger => grabbedAgent;
+    public NPCQueueAgent HoveredPassenger { get; private set; }
+    public bool IsHandingOff => handoff != null;
+    public bool InputSuspended { get; set; }
+    public event System.Action<NPCQueueAgent> PassengerReleased;
+    public System.Func<NPCQueueAgent, bool> CanGrabPassenger { get; set; }
+    public System.Func<NPCQueueAgent, Vector3[]> HandoffPath { get; set; }
+    private Vector3[] handoff;
+    private int handoffIndex;
+    private float handoffDeadline;
 
     // =====================================
     // UPDATE
@@ -52,14 +63,28 @@ public class NPCGrabController : MonoBehaviour
 
     private void Update()
     {
+        if (InputSuspended) return;
         if (Mouse.current == null)
         {
             ReleaseNPC();
             return;
         }
 
+        if (handoff == null &&
+            (Mouse.current.rightButton.wasPressedThisFrame ||
+             (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)))
+        {
+            if (grabbedAgent != null) BeginHandoff();
+            else if (!PointerOverInterface()) TryQuickHandoff();
+        }
+        if (handoff != null)
+        {
+            StepHandoff();
+            return;
+        }
+
         if (Mouse.current.leftButton.wasPressedThisFrame &&
-            grabbedTransform == null)
+            grabbedTransform == null && !PointerOverInterface())
         {
             TryGrabNPC();
         }
@@ -75,10 +100,61 @@ public class NPCGrabController : MonoBehaviour
         {
             ReleaseNPC();
         }
+        HoveredPassenger = grabbedAgent == null && !PointerOverInterface()
+            ? PassengerUnderPointer(GetCurrentCamera()) : null;
     }
 
-    private void OnDisable() { ReleaseNPC(); }
+    private static bool PointerOverInterface() =>
+        EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+
+    private void OnDisable() { ReleaseNPC(); HoveredPassenger = null; }
     private void OnApplicationFocus(bool focused) { if (!focused) ReleaseNPC(); }
+
+    public void ReleaseHeldPassenger() => ReleaseNPC();
+
+    public bool IsVisibleFrom(Camera camera, Vector3 point) =>
+        camera != null && !Physics.Linecast(camera.transform.position, point, obstacleLayers, QueryTriggerInteraction.Ignore);
+
+    private void BeginHandoff()
+    {
+        StartHandoff(HandoffPath?.Invoke(grabbedAgent));
+    }
+
+    private void TryQuickHandoff()
+    {
+        if (HandoffPath == null) return;
+        Physics.SyncTransforms();
+        NPCQueueAgent agent = PassengerUnderPointer(GetCurrentCamera());
+        if (agent == null) return;
+        Vector3[] path = HandoffPath(agent);
+        if (path != null && GrabPassenger(agent)) StartHandoff(path);
+    }
+
+    private void StartHandoff(Vector3[] path)
+    {
+        handoff = path;
+        handoffIndex = 0;
+        handoffDeadline = Time.time + 1.1f;
+    }
+
+    private void StepHandoff()
+    {
+        if (grabbedTransform == null || Time.time >= handoffDeadline || handoffIndex >= handoff.Length)
+        {
+            ReleaseNPC();
+            return;
+        }
+        Vector3 current = grabbedTransform.position;
+        Vector3 next = handoff[handoffIndex];
+        next.y = current.y;
+        // The handoff uses the same wall sweep as an ordinary drag.
+        Vector3 safe = GetSafePosition(current, Vector3.MoveTowards(current, next, dragSpeed * 1.65f * Time.deltaTime));
+        safe.y = Mathf.MoveTowards(current.y, originalY + liftHeight, 8f * Time.deltaTime);
+        grabbedTransform.position = safe;
+        Physics.SyncTransforms();
+        if (Vector3.ProjectOnPlane(safe - next, Vector3.up).sqrMagnitude < .007f)
+            handoffIndex++;
+    }
 
     // =====================================
     // CAMERA
@@ -133,42 +209,27 @@ public class NPCGrabController : MonoBehaviour
     // GRAB NPC
     // =====================================
 
+    private NPCQueueAgent PassengerUnderPointer(Camera cam)
+    {
+        if (cam == null || Mouse.current == null) return null;
+        Ray ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());
+        if (!Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, npcLayer, QueryTriggerInteraction.Ignore))
+            return null;
+        // A selectable NPC behind a wall must not be grabbed through that wall.
+        if (Physics.Raycast(ray, hit.distance, obstacleLayers, QueryTriggerInteraction.Ignore)) return null;
+        NPCQueueAgent agent = hit.collider.GetComponentInParent<NPCQueueAgent>();
+        return agent != null && (CanGrabPassenger == null || CanGrabPassenger(agent)) ? agent : null;
+    }
+
     private void TryGrabNPC()
     {
-        Camera cam = GetCurrentCamera();
-
-        if (cam == null)
-        {
-            Debug.LogWarning("กรุณากำหนด Player Camera");
-            return;
-        }
-
-        Ray ray = cam.ScreenPointToRay(
-            Mouse.current.position.ReadValue()
-        );
-
         Physics.SyncTransforms();
+        NPCQueueAgent agent = PassengerUnderPointer(GetCurrentCamera());
+        if (agent != null) GrabPassenger(agent);
+    }
 
-        if (!Physics.Raycast(
-            ray,
-            out RaycastHit hit,
-            maxRayDistance,
-            npcLayer,
-            QueryTriggerInteraction.Ignore))
-        {
-            return;
-        }
-
-        // A selectable NPC behind a wall must not be grabbed through that wall.
-        if (Physics.Raycast(ray, out RaycastHit obstruction, hit.distance, obstacleLayers, QueryTriggerInteraction.Ignore))
-            return;
-
-        NPCQueueAgent agent =
-            hit.collider.GetComponentInParent<NPCQueueAgent>();
-
-        if (agent == null)
-            return;
-
+    private bool GrabPassenger(NPCQueueAgent agent)
+    {
         CapsuleCollider capsule =
             agent.GetComponent<CapsuleCollider>();
 
@@ -183,7 +244,7 @@ public class NPCGrabController : MonoBehaviour
             Debug.LogWarning(
                 "NPC ไม่มี Capsule Collider ที่เปิดใช้งาน"
             );
-            return;
+            return false;
         }
 
         grabbedAgent = agent;
@@ -196,6 +257,7 @@ public class NPCGrabController : MonoBehaviour
 
         // หยุดระบบ Queue
         agent.SetGrabbed(true);
+        ShiftAudio.Play(ShiftCue.Grab);
         originalY = agent.GroundY;
 
         if (queueManager != null)
@@ -211,13 +273,9 @@ public class NPCGrabController : MonoBehaviour
             new Vector3(0f, targetY, 0f)
         );
 
-        // เลือกกล้องตามตำแหน่งตัวละครก่อนเริ่มลาก
-        UpdateElevatorCameraState();
-
         // คำนวณตำแหน่งเมาส์
         RefreshDragOffset();
-
-        Debug.Log("จับตัวละครแล้ว: " + grabbedTransform.name);
+        return true;
     }
 
     // =====================================
@@ -282,8 +340,6 @@ public class NPCGrabController : MonoBehaviour
 
         Physics.SyncTransforms();
 
-        // ตรวจสอบว่าตัวละครเข้าออกลิฟต์หรือไม่
-        UpdateElevatorCameraState();
     }
 
     // =====================================
@@ -477,68 +533,6 @@ public class NPCGrabController : MonoBehaviour
     }
 
     // =====================================
-    // ELEVATOR CAMERA AUTO SWITCH
-    // =====================================
-
-    private bool IsInsideElevator()
-    {
-        if (elevatorZone == null ||
-            grabbedTransform == null)
-            return false;
-
-        Vector3 worldPosition =
-            grabbedCapsule != null
-            ? grabbedCapsule.bounds.center
-            : grabbedTransform.position;
-
-        // แปลงตำแหน่งเป็น Local Space ของ ElevatorZone
-        Vector3 localPosition =
-            elevatorZone.transform.InverseTransformPoint(
-                worldPosition
-            );
-
-        localPosition -= elevatorZone.center;
-
-        Vector3 halfSize =
-            elevatorZone.size * 0.5f;
-
-        return
-            Mathf.Abs(localPosition.x) <= halfSize.x &&
-            Mathf.Abs(localPosition.y) <= halfSize.y &&
-            Mathf.Abs(localPosition.z) <= halfSize.z;
-    }
-
-    private void UpdateElevatorCameraState()
-    {
-        if (cameraSwitcher == null ||
-            elevatorZone == null ||
-            grabbedTransform == null)
-            return;
-
-        bool inside = IsInsideElevator();
-
-        // ถ้ากล้องตรงกับตำแหน่งอยู่แล้ว ไม่ต้องเปลี่ยน
-        if (inside == cameraSwitcher.IsElevatorView)
-            return;
-
-        if (inside)
-        {
-            cameraSwitcher.ShowElevator();
-
-            Debug.Log("เข้า Elevator: เปลี่ยนกล้องแล้ว");
-        }
-        else
-        {
-            cameraSwitcher.ShowLobby();
-
-            Debug.Log("ออก Elevator: กลับ Lobby แล้ว");
-        }
-
-        // ปรับตำแหน่งเมาส์หลังเปลี่ยนกล้อง
-        RefreshDragOffset();
-    }
-
-    // =====================================
     // REFRESH DRAG OFFSET
     // =====================================
 
@@ -579,6 +573,7 @@ public class NPCGrabController : MonoBehaviour
 
     private void ReleaseNPC()
     {
+        handoff = null;
         if (grabbedTransform == null)
             return;
 
@@ -588,9 +583,13 @@ public class NPCGrabController : MonoBehaviour
         grabbedAgent = null;
         grabbedCapsule = null;
 
-        if (agent != null) agent.ReleaseToGround(lowerSpeed);
+        if (agent != null)
+        {
+            agent.ReleaseToGround(lowerSpeed);
+            ShiftAudio.Play(ShiftCue.Release);
+            PassengerReleased?.Invoke(agent);
+        }
 
-        Debug.Log("ปล่อยตัวละครแล้ว");
     }
 
 }

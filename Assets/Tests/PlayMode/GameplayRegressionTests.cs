@@ -288,13 +288,15 @@ public class GameplayRegressionTests
     [UnityTest]
     public IEnumerator SevenFloorSceneHasValidCollisionsAndUniqueGameplaySystems()
     {
-        Assert.AreEqual("Assets/TheElevatorLobby/Scenes/Elevator_Lobby_Main.unity",UnityEditor.EditorBuildSettings.scenes.First(s=>s.enabled).path);
+        Assert.AreEqual("Assets/TheElevatorLobby/Scenes/mn.unity",UnityEditor.EditorBuildSettings.scenes.First(s=>s.enabled).path);
+        Assert.IsTrue(UnityEditor.EditorBuildSettings.scenes.Any(s=>s.enabled && s.path.EndsWith("/Elevator_Lobby_Main.unity")));
         yield return SceneManager.LoadSceneAsync("Assets/TheElevatorLobby/Scenes/Elevator_Lobby_Main.unity",LoadSceneMode.Additive);
         yield return null;
         var scene=SceneManager.GetSceneByName("Elevator_Lobby_Main");
         var roots=scene.GetRootGameObjects();var building=roots.Single(g=>g.name=="Building_7_Floors");
-        Assert.AreEqual(7,building.transform.childCount);
-        foreach(Transform floor in building.transform)
+        var floors=building.transform.Cast<Transform>().Where(t=>t.name.StartsWith("Floor_")).ToArray();
+        Assert.AreEqual(7,floors.Length);
+        foreach(Transform floor in floors)
         {
             int number=int.Parse(floor.name.Substring(6));Assert.AreEqual((number-1)*5.2f,floor.position.y,.001f);
             Assert.IsTrue(floor.GetComponentsInChildren<TextMesh>(true).Any(t=>t.text==number.ToString("00")));
@@ -312,8 +314,11 @@ public class GameplayRegressionTests
         Assert.IsTrue(Get<Camera>(cameras,"ActiveCamera").gameObject.activeInHierarchy);
         Call(cameras,"ShowLobby");Assert.IsFalse(Get<bool>(cameras,"IsElevatorView"));
         Assert.AreEqual(1,building.GetComponentsInChildren<Camera>(true).Count(c=>c.isActiveAndEnabled));
-        var doors=behaviours.Single(c=>c.GetType().Name=="ElevatorDoorController");
-        Call(doors,"CloseDoors");yield return new WaitForSeconds(.2f);
+        var doorControllers=behaviours.Where(c=>c.GetType().Name=="ElevatorDoorController").ToArray();
+        Assert.AreEqual(7,doorControllers.Length);
+        var doors=doorControllers.Single(d=>d.GetComponentsInParent<Transform>(true).Any(t=>t.name=="Floor_01"));
+        yield return new WaitForSeconds(1.2f);
+        Call(doors,"CloseDoors");yield return new WaitForSeconds(1.2f);
         Assert.Less(Vector3.Distance(Field<Transform>(doors,"leftDoor").localPosition,Field<Vector3>(doors,"leftClosedPos")),.001f);
         Assert.Less(Vector3.Distance(Field<Transform>(doors,"rightDoor").localPosition,Field<Vector3>(doors,"rightClosedPos")),.001f);
         Call(doors,"OpenDoors");yield return new WaitForSeconds(1.1f);
