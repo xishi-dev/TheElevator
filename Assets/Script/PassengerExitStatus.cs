@@ -48,6 +48,10 @@ public class PassengerExitStatus : MonoBehaviour
 
     private GUIStyle labelStyle;
 
+    // NEW: Shared loading screen reference.
+    private static CanvasGroup blackFadePanel;
+    private static int lastLoadingSearchFrame = -1;
+
     // =====================================
     // SETUP
     // =====================================
@@ -98,6 +102,46 @@ public class PassengerExitStatus : MonoBehaviour
                 return;
             }
         }
+    }
+
+    // =====================================
+    // NEW: LOADING SCREEN CHECK
+    // =====================================
+
+    private bool IsLoadingScreenActive()
+    {
+        // Find the existing BlackFadePanel,
+        // including when it is inactive.
+        if (blackFadePanel == null &&
+            lastLoadingSearchFrame != Time.frameCount)
+        {
+            lastLoadingSearchFrame = Time.frameCount;
+
+            CanvasGroup[] groups =
+                FindObjectsByType<CanvasGroup>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None
+                );
+
+            foreach (CanvasGroup group in groups)
+            {
+                if (group == null)
+                    continue;
+
+                if (group.gameObject.name == "BlackFadePanel")
+                {
+                    blackFadePanel = group;
+                    break;
+                }
+            }
+        }
+
+        if (blackFadePanel == null)
+            return false;
+
+        // Hide markers during fade out,
+        // loading and fade in.
+        return blackFadePanel.gameObject.activeInHierarchy;
     }
 
     // =====================================
@@ -343,6 +387,15 @@ public class PassengerExitStatus : MonoBehaviour
             return;
 
         if (Event.current.type != EventType.Repaint)
+            return;
+
+        // NEW:
+        // Do not draw EXIT / LATE over
+        // the floor loading screen.
+        //
+        // This only hides the visual marker.
+        // Passenger status remains unchanged.
+        if (IsLoadingScreenActive())
             return;
 
         Camera cam = GetActiveCamera();

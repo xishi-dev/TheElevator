@@ -20806,12 +20806,18 @@ MonoBehaviour:
   lobbyCamera: {fileID: 1224222837}
   elevatorZone: {fileID: 1073296774}
   grabController: {fileID: 538871562}
-  waitBeforeWalking: 4
+  waitBeforeWalking: 1
   walkSpeed: 1.7
   rotateSpeed: 360
   minWalkDistance: 2
   screenMargin: 0.15
   maxWalkTime: 25
+  solidLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  exitClearance: 0.12
+  wallClearance: 0.06
+  pathCheckDistance: 1.2
 --- !u!1 &88718188
 GameObject:
   m_ObjectHideFlags: 0
@@ -444789,6 +444795,7 @@ MonoBehaviour:
   unloadSeconds: 25
   noExitSeconds: 3
   exitChance: 0.2
+  deliveryExitClearance: 0.12
   phaseTransitionDelay: 3
   boardingPoints: 100
   unloadingPoints: 125
