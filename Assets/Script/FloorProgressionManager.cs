@@ -1,4 +1,3 @@
-
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -217,9 +216,7 @@ public class FloorProgressionManager : MonoBehaviour
             ElevatorDoorController door =
                 floors[i].doorController;
 
-            door.SetManualInputEnabled(false);
-
-            if (i != 0)
+            if (door != null && i != 0)
             {
                 door.CloseDoors();
             }

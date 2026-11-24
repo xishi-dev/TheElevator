@@ -1,5 +1,4 @@
-﻿
-using UnityEngine;
+﻿using UnityEngine;
 
 public class ElevatorDoorController : MonoBehaviour
 {
@@ -16,6 +15,7 @@ public class ElevatorDoorController : MonoBehaviour
     [SerializeField] private AudioSource doorAudioSource;
     [SerializeField] private AudioClip openDoorSound;
     [SerializeField] private AudioClip closeDoorSound;
+    [SerializeField] private AudioClip travelSound;
     [Range(0f, 1f)]
     [SerializeField] private float audioVolume = 1f;
 
@@ -48,6 +48,11 @@ public class ElevatorDoorController : MonoBehaviour
             return;
         }
 
+        if (doorAudioSource == null)
+        {
+            doorAudioSource = GetComponent<AudioSource>();
+        }
+
         leftClosedPos = leftDoor.localPosition;
         rightClosedPos = rightDoor.localPosition;
 
@@ -62,12 +67,11 @@ public class ElevatorDoorController : MonoBehaviour
             leftDoor.localPosition = leftOpenPos;
             rightDoor.localPosition = rightOpenPos;
         }
-    }
-
-    private void Start()
-    {
-        if (openOnStart)
-            PlayDoorSound(openDoorSound);
+        else
+        {
+            leftDoor.localPosition = leftClosedPos;
+            rightDoor.localPosition = rightClosedPos;
+        }
     }
 
     private void Update()
@@ -87,27 +91,44 @@ public class ElevatorDoorController : MonoBehaviour
     }
 
     // เรียกใช้เมื่อถึงเวลาต้องเปิดประตู
-    public void OpenDoors()
+    public void OpenDoors(bool playSound = true)
     {
-        if (!initialized || isOpen) return;
+        if (!initialized) return;
 
+        bool stateChanged = !isOpen;
         isOpen = true;
-        PlayDoorSound(openDoorSound);
+
+        if (playSound && stateChanged)
+        {
+            PlayDoorSound(openDoorSound);
+        }
     }
 
     // เรียกใช้เมื่อถึงเวลาต้องปิดประตู
-    public void CloseDoors()
+    public void CloseDoors(bool playSound = true)
     {
-        if (!initialized || !isOpen) return;
+        if (!initialized) return;
 
+        bool stateChanged = isOpen;
         isOpen = false;
-        PlayDoorSound(closeDoorSound);
+
+        if (playSound && stateChanged)
+        {
+            PlayDoorSound(closeDoorSound);
+        }
+    }
+
+    // เรียกใช้เมื่อลิฟต์กำลังเคลื่อนที่ไปชั้นถัดไป
+    public void PlayTravelSound()
+    {
+        PlayDoorSound(travelSound);
     }
 
     private void PlayDoorSound(AudioClip clip)
     {
         if (doorAudioSource == null || clip == null) return;
 
+        doorAudioSource.Stop();
         doorAudioSource.PlayOneShot(clip, audioVolume);
     }
 }
