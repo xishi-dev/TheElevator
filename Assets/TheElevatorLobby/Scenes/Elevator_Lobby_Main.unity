@@ -3045,7 +3045,7 @@ Transform:
   m_GameObject: {fileID: 11774524}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 7.98, y: -0.28, z: 6.217}
+  m_LocalPosition: {x: 7.98, y: 0.007, z: 6.217}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5878,7 +5878,7 @@ Transform:
   m_GameObject: {fileID: 27701760}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.024, y: -0.2800007, z: 6.217}
+  m_LocalPosition: {x: 2.024, y: 0.0069999695, z: 6.217}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7197,7 +7197,7 @@ Transform:
   m_GameObject: {fileID: 33683819}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.047, y: 31.282, z: 2.921}
+  m_LocalPosition: {x: -2.047, y: 31.287, z: 2.921}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -77869,7 +77869,7 @@ Transform:
   m_GameObject: {fileID: 320086529}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.024, y: -0.23999977, z: 6.217}
+  m_LocalPosition: {x: 2.024, y: 0.00799942, z: 6.217}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -129085,13 +129085,17 @@ MonoBehaviour:
     m_Bits: 64
   liftHeight: 0.7
   liftSpeed: 2
-  dragSpeed: 12
+  dragSpeed: 15
   lowerSpeed: 2.5
   maxRayDistance: 100
+  mouseSensitivity: 1
+  maxMouseDeltaPixels: 150
+  minLobbyCameraDistance: 1.2
   scrollMovePerStep: 0.35
   maxScrollDistance: 3
   invertScrollDirection: 0
-  collisionSkin: 0.03
+  collisionSkin: 0.04
+  switchCameraOnRelease: 0
 --- !u!1 &538875651
 GameObject:
   m_ObjectHideFlags: 0
@@ -130499,7 +130503,7 @@ Transform:
   m_GameObject: {fileID: 544484356}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 7.98, y: -0.24, z: 6.217}
+  m_LocalPosition: {x: 7.98, y: 0.008, z: 6.217}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -294595,7 +294599,7 @@ Transform:
   m_GameObject: {fileID: 1268286539}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.047, y: 20.823, z: 2.921}
+  m_LocalPosition: {x: -2.047, y: 20.9033, z: 2.921}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -443993,9 +443997,18 @@ MonoBehaviour:
   travelDuration: 5
   fadeDuration: 0.4
   blackFade: {fileID: 640195640}
+  unloadSeconds: 15
+  noExitSeconds: 3
+  exitChance: 0.3
+  phaseTransitionDelay: 5
+  boardingPoints: 100
+  unloadingPoints: 125
+  missedExitPenalty: 100
+  latePenaltyPerSecond: 2
   currentFloorText: {fileID: 0}
   finishPanel: {fileID: 0}
   finishText: {fileID: 0}
+  showPhaseOverlay: 1
 --- !u!1 &1895772919
 GameObject:
   m_ObjectHideFlags: 0
@@ -445299,7 +445312,7 @@ Transform:
   m_GameObject: {fileID: 1902063348}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.047, y: 15.722, z: 2.921}
+  m_LocalPosition: {x: -2.047, y: 15.702, z: 2.921}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -489703,7 +489716,7 @@ Transform:
   m_GameObject: {fileID: 2090355477}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.047, y: 10.452, z: 2.921}
+  m_LocalPosition: {x: -2.047, y: 10.497, z: 2.921}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -492745,6 +492758,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2101065901}
   - component: {fileID: 2101065902}
+  - component: {fileID: 2101065903}
   m_Layer: 0
   m_Name: NPC_System
   m_TagString: Untagged
@@ -492796,6 +492810,18 @@ MonoBehaviour:
   queueStart: {fileID: 55384069}
   queueDirection: {x: 1, y: 0, z: 0}
   spacing: 1.2
+--- !u!114 &2101065903
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2101065900}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5604d4e13af352e4e92d73e133babba0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PassengerRagdoll
 --- !u!1 &2101533725
 GameObject:
   m_ObjectHideFlags: 0

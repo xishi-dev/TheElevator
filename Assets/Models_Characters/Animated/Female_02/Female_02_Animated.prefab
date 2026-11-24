@@ -210,6 +210,7 @@ GameObject:
   - component: {fileID: 3562887428788324986}
   - component: {fileID: 6081355878965195527}
   - component: {fileID: 2945929164228404299}
+  - component: {fileID: -5399720363485803505}
   m_Layer: 7
   m_Name: Female_02_Animated
   m_TagString: Untagged
@@ -285,6 +286,18 @@ CapsuleCollider:
   m_Height: 1.55
   m_Direction: 1
   m_Center: {x: 0, y: 0.775, z: 0}
+--- !u!114 &-5399720363485803505
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1430383786188362275}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5604d4e13af352e4e92d73e133babba0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PassengerRagdoll
 --- !u!1 &1431965777095335158
 GameObject:
   m_ObjectHideFlags: 0

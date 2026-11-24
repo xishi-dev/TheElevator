@@ -595,6 +595,7 @@ GameObject:
   - component: {fileID: 2064188609361361661}
   - component: {fileID: 5751843096083624203}
   - component: {fileID: 8506789532859256812}
+  - component: {fileID: -8115948574408419070}
   m_Layer: 7
   m_Name: Male_04_Animated
   m_TagString: Untagged
@@ -670,6 +671,18 @@ CapsuleCollider:
   m_Height: 1.73
   m_Direction: 1
   m_Center: {x: 0, y: 0.865, z: 0}
+--- !u!114 &-8115948574408419070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6727929591373246069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5604d4e13af352e4e92d73e133babba0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PassengerRagdoll
 --- !u!1 &6812627500226828535
 GameObject:
   m_ObjectHideFlags: 0

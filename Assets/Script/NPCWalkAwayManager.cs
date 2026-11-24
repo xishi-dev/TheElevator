@@ -18,6 +18,7 @@ public class NPCWalkAwayManager : MonoBehaviour
     [SerializeField] private float minWalkDistance = 2f;
     [SerializeField] private float screenMargin = 0.15f;
     [SerializeField] private float maxWalkTime = 25f;
+
     private class NPCState
     {
         public float waitTimer = 0f;
@@ -42,6 +43,7 @@ public class NPCWalkAwayManager : MonoBehaviour
         {
             return;
         }
+
         scanTimer -= Time.deltaTime;
 
         if (scanTimer <= 0f)
@@ -52,6 +54,7 @@ public class NPCWalkAwayManager : MonoBehaviour
 
         UpdateNPCs();
     }
+
     private void ScanNPCs()
     {
         NPCQueueAgent[] agents =
@@ -85,11 +88,13 @@ public class NPCWalkAwayManager : MonoBehaviour
                 removeList.Add(agent);
                 continue;
             }
+
             if (agent.IsInQueue)
             {
                 ResetState(state);
                 continue;
             }
+
             if (agent.IsGrabbed || agent.IsLowering)
             {
                 ResetState(state);
@@ -113,6 +118,7 @@ public class NPCWalkAwayManager : MonoBehaviour
 
                 continue;
             }
+
             WalkAway(agent, state);
         }
 
@@ -139,6 +145,7 @@ public class NPCWalkAwayManager : MonoBehaviour
         {
             state.walkDirection = Vector3.left;
         }
+
         state.walkDirection.y = 0f;
 
         if (state.walkDirection.sqrMagnitude < 0.001f)
@@ -152,6 +159,7 @@ public class NPCWalkAwayManager : MonoBehaviour
             agent.name + " เริ่มเดินออกจาก Lobby"
         );
     }
+
     private void WalkAway(
         NPCQueueAgent agent,
         NPCState state)
@@ -229,6 +237,7 @@ public class NPCWalkAwayManager : MonoBehaviour
             Mathf.Abs(localPosition.y) <= halfSize.y &&
             Mathf.Abs(localPosition.z) <= halfSize.z;
     }
+
     private bool IsOutsideScreen(NPCQueueAgent agent)
     {
         if (lobbyCamera == null)
@@ -243,6 +252,7 @@ public class NPCWalkAwayManager : MonoBehaviour
         return screenPoint.z <= 0f ||
                screenPoint.x < -screenMargin;
     }
+
     private void ResetState(NPCState state)
     {
         state.waitTimer = 0f;
