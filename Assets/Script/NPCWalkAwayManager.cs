@@ -28,6 +28,18 @@ public class NPCWalkAwayManager : MonoBehaviour
     [SerializeField] private float walkSpeed = 1.7f;
     [SerializeField] private float rotateSpeed = 360f;
 
+    // NEW: NPC dropped outside before boarding.
+
+    [Header("Failed Boarding - Fast Exit")]
+    [Min(0f)]
+    [SerializeField] private float failedBoardingWait = 0.5f;
+
+    [Min(0.1f)]
+    [SerializeField] private float failedBoardingSpeed = 9f;
+
+    [Min(0f)]
+    [SerializeField] private float failedBoardingRotateSpeed = 1080f;
+
     [Header("Remove NPC Settings")]
     [SerializeField] private float minWalkDistance = 2f;
     [SerializeField] private float screenMargin = 0.15f;
@@ -51,7 +63,6 @@ public class NPCWalkAwayManager : MonoBehaviour
 
     private void Update()
     {
-        // Do not interfere with loading or ending.
         if (grabController != null &&
             !grabController.isActiveAndEnabled)
         {
@@ -75,7 +86,6 @@ public class NPCWalkAwayManager : MonoBehaviour
 
         forward.Normalize();
 
-        // Walk parallel to the elevator front wall.
         Vector3 sideways =
             Vector3.Cross(Vector3.up, forward).normalized;
 
@@ -94,7 +104,9 @@ public class NPCWalkAwayManager : MonoBehaviour
         if (scanTimer <= 0f)
         {
             ScanNPCs();
-            scanTimer = 0.5f;
+
+            // Detect newly dropped NPCs faster.
+            scanTimer = 0.1f;
         }
 
         Physics.SyncTransforms();
@@ -138,6 +150,9 @@ public class NPCWalkAwayManager : MonoBehaviour
                 continue;
             }
 
+            // Never move NPCs that are still queued,
+            // held by the player, or falling.
+
             if (agent.IsInQueue ||
                 agent.IsGrabbed ||
                 agent.IsLowering ||
@@ -150,8 +165,8 @@ public class NPCWalkAwayManager : MonoBehaviour
             PassengerExitStatus status =
                 agent.GetComponent<PassengerExitStatus>();
 
-            // EXIT / LATE must not walk away
-            // before delivery is confirmed.
+            // EXIT / LATE must be delivered first.
+
             if (status != null && status.IsPending)
             {
                 ResetState(state);
@@ -163,13 +178,25 @@ public class NPCWalkAwayManager : MonoBehaviour
                 status.State ==
                 PassengerExitStatus.ExitState.Delivered;
 
+            // NEW:
+            // NPC has left the queue,
+            // but has never boarded the elevator.
+
+            bool failedBoarding =
+                !delivered &&
+                !agent.IsInQueue &&
+                (status == null || !status.HasBoarded);
+
             CapsuleCollider capsule =
                 GetCapsule(agent);
 
-            Bounds body = GetBodyBounds(agent, capsule);
+            Bounds body =
+                GetBodyBounds(agent, capsule);
+
             Bounds zone = elevatorZone.bounds;
 
             // Ignore NPCs on other floors.
+
             if (body.max.y < zone.min.y - 0.5f ||
                 body.min.y > zone.max.y + 0.5f)
             {
@@ -180,32 +207,65 @@ public class NPCWalkAwayManager : MonoBehaviour
             float clearance =
                 GetFrontClearance(body, forward);
 
-            // Normal NPCs must fully clear
-            // the front of the elevator.
-            if (!delivered &&
-                clearance < exitClearance)
+            if (!delivered)
             {
-                ResetState(state);
-                continue;
+                if (failedBoarding)
+                {
+                    // Allow a failed boarding NPC
+                    // to walk outward when its center
+                    // is already beyond the door.
+
+                    float bodyExtent =
+                        Mathf.Abs(forward.x) *
+                        body.extents.x +
+                        Mathf.Abs(forward.z) *
+                        body.extents.z;
+
+                    if (clearance + bodyExtent < 0f)
+                    {
+                        ResetState(state);
+                        continue;
+                    }
+                }
+                else if (clearance < exitClearance)
+                {
+                    ResetState(state);
+                    continue;
+                }
             }
 
-            // Delivered NPCs may have been pushed
-            // toward the door again. Allow them
-            // to move outward, never inward.
+            // Choose different waiting times.
+
+            float requiredWait = failedBoarding
+                ? failedBoardingWait
+                : waitBeforeWalking;
+
             if (!state.isWalkingAway)
             {
                 state.waitTimer += Time.deltaTime;
 
-                if (state.waitTimer < waitBeforeWalking)
+                if (state.waitTimer < requiredWait)
                     continue;
 
                 state.isWalkingAway = true;
                 state.walkedDistance = 0f;
                 state.walkTimer = 0f;
 
-                Debug.Log(
-                    agent.name + " เริ่มเดินออกจาก Lobby"
-                );
+                if (failedBoarding)
+                {
+                    Debug.Log(
+                        "[FAILED BOARDING] " +
+                        agent.name +
+                        " is leaving quickly."
+                    );
+                }
+                else
+                {
+                    Debug.Log(
+                        agent.name +
+                        " is walking away."
+                    );
+                }
             }
 
             WalkAway(
@@ -214,7 +274,8 @@ public class NPCWalkAwayManager : MonoBehaviour
                 capsule,
                 forward,
                 sideways,
-                clearance
+                clearance,
+                failedBoarding
             );
         }
 
@@ -225,7 +286,7 @@ public class NPCWalkAwayManager : MonoBehaviour
     }
 
     // =====================================
-    // DISTANCE FROM THE FRONT OF ELEVATOR
+    // DISTANCE FROM ELEVATOR FRONT
     // =====================================
 
     private float GetFrontClearance(
@@ -261,7 +322,7 @@ public class NPCWalkAwayManager : MonoBehaviour
     }
 
     // =====================================
-    // WALK OUT FIRST, THEN TURN SIDEWAYS
+    // WALK AWAY
     // =====================================
 
     private void WalkAway(
@@ -270,15 +331,26 @@ public class NPCWalkAwayManager : MonoBehaviour
         CapsuleCollider capsule,
         Vector3 forward,
         Vector3 sideways,
-        float clearance)
+        float clearance,
+        bool failedBoarding)
     {
         Vector3 direction =
             clearance < exitClearance + forwardClearance
                 ? forward
                 : sideways;
 
+        // NEW: Failed boarding NPCs move faster.
+
+        float currentSpeed = failedBoarding
+            ? failedBoardingSpeed
+            : walkSpeed;
+
+        float currentRotateSpeed = failedBoarding
+            ? failedBoardingRotateSpeed
+            : rotateSpeed;
+
         float distance =
-            Mathf.Max(0.1f, walkSpeed) *
+            Mathf.Max(0.1f, currentSpeed) *
             Time.deltaTime;
 
         float allowed = GetSafeDistance(
@@ -288,8 +360,8 @@ public class NPCWalkAwayManager : MonoBehaviour
             distance
         );
 
-        // If sideways movement is blocked,
-        // try moving farther from the elevator.
+        // Avoid walking into elevator walls.
+
         if (allowed <= 0.0001f &&
             direction != forward)
         {
@@ -303,7 +375,23 @@ public class NPCWalkAwayManager : MonoBehaviour
             );
         }
 
-        // Never force an NPC through a wall.
+        // Try the opposite side if the fast exit
+        // is blocked by an obstacle.
+
+        if (failedBoarding &&
+            allowed <= 0.0001f &&
+            clearance >= exitClearance + forwardClearance)
+        {
+            direction = -sideways;
+
+            allowed = GetSafeDistance(
+                agent,
+                capsule,
+                direction,
+                distance
+            );
+        }
+
         if (allowed > 0.0001f)
         {
             agent.transform.position +=
@@ -316,13 +404,31 @@ public class NPCWalkAwayManager : MonoBehaviour
                 Quaternion.RotateTowards(
                     agent.transform.rotation,
                     targetRotation,
-                    rotateSpeed * Time.deltaTime
+                    currentRotateSpeed * Time.deltaTime
                 );
 
             state.walkedDistance += allowed;
         }
 
         state.walkTimer += Time.deltaTime;
+
+        // Remove failed boarding NPCs only after
+        // they have cleared the elevator
+        // and left the camera view.
+
+        if (failedBoarding)
+        {
+            if (clearance >= exitClearance &&
+                IsOutsideScreen(agent))
+            {
+                Destroy(agent.gameObject);
+                removeList.Add(agent);
+            }
+
+            return;
+        }
+
+        // Preserve the normal removal rules.
 
         if (state.walkedDistance >= minWalkDistance &&
             clearance >= exitClearance)
@@ -365,6 +471,7 @@ public class NPCWalkAwayManager : MonoBehaviour
             {
                 axis = t.right;
                 axisScale = Mathf.Abs(scale.x);
+
                 radiusScale = Mathf.Max(
                     Mathf.Abs(scale.y),
                     Mathf.Abs(scale.z)
@@ -374,6 +481,7 @@ public class NPCWalkAwayManager : MonoBehaviour
             {
                 axis = t.forward;
                 axisScale = Mathf.Abs(scale.z);
+
                 radiusScale = Mathf.Max(
                     Mathf.Abs(scale.x),
                     Mathf.Abs(scale.y)
@@ -383,6 +491,7 @@ public class NPCWalkAwayManager : MonoBehaviour
             {
                 axis = t.up;
                 axisScale = Mathf.Abs(scale.y);
+
                 radiusScale = Mathf.Max(
                     Mathf.Abs(scale.x),
                     Mathf.Abs(scale.z)
@@ -449,7 +558,8 @@ public class NPCWalkAwayManager : MonoBehaviour
             );
         }
 
-        // Validate destination too.
+        // Validate the destination.
+
         for (int attempt = 0; attempt < 6; attempt++)
         {
             if (allowed <= 0.0001f)
@@ -528,7 +638,6 @@ public class NPCWalkAwayManager : MonoBehaviour
             return false;
         }
 
-        // Ignore the floor underneath the NPC.
         if (obstacle.bounds.max.y <= body.min.y + 0.05f)
             return false;
 

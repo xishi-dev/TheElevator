@@ -1,7 +1,10 @@
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+using Random = UnityEngine.Random;
 
 public class ElevatorEnding : MonoBehaviour
 {
@@ -16,71 +19,59 @@ public class ElevatorEnding : MonoBehaviour
     [Min(0f)]
     [SerializeField] private float doorWait = 0.5f;
 
-    [Min(0.05f)]
-    [SerializeField] private float gatherDuration = 0.08f;
+    [Min(1f)]
+    [SerializeField] private float finishDelay = 6f;
 
-    [Min(0.05f)]
-    [SerializeField] private float doorCrossDuration = 0.10f;
+    [Header("EXPLOSIVE FORCE")]
+    [SerializeField] private float minLaunchForce = 10f;
+    [SerializeField] private float maxLaunchForce = 17f;
 
-    [Min(0.1f)]
-    [SerializeField] private float launchDuration = 0.55f;
+    [SerializeField] private float sideForce = 4.5f;
 
-    [Min(0f)]
-    [SerializeField] private float launchStagger = 0.025f;
+    [SerializeField] private float minUpForce = 2f;
+    [SerializeField] private float maxUpForce = 5f;
 
-    [Min(0f)]
-    [SerializeField] private float finishDelay = 2.5f;
+    [SerializeField] private float spinForce = 10f;
 
-    [Header("Ejection Settings")]
-    [Min(0f)]
-    [SerializeField] private float sideSpread = 3.2f;
+    [Header("Ragdoll Physics")]
+    [SerializeField] private float colliderSize = 1f;
 
-    [Min(0f)]
-    [SerializeField] private float extraDistance = 2.5f;
+    [SerializeField] private float linearDamping = 0.05f;
+    [SerializeField] private float angularDamping = 0.15f;
 
-    [Min(0f)]
-    [SerializeField] private float jumpHeightMin = 0.8f;
+    [SerializeField] private float maxDepenetrationVelocity = 10f;
 
-    [Min(0f)]
-    [SerializeField] private float jumpHeightMax = 2.2f;
+    [SerializeField] private string physicsLayer = "Default";
 
-    [Min(0f)]
-    [SerializeField] private float spinDegrees = 720f;
+    private GameObject physicsRoot;
+    private int ragdollLayer;
+    private bool playing;
 
-    // =====================================
-    // NEW: CHAOTIC EJECTION SETTINGS
-    // =====================================
+    private class RagdollPart
+    {
+        public Transform bone;
+        public Rigidbody body;
+        public Collider collider;
+    }
 
-    [Header("Chaotic Ejection")]
-    [Min(0f)]
-    [SerializeField] private float randomLaunchDelay = 0.2f;
+    private class RagdollNPC
+    {
+        public NPCQueueAgent agent;
 
-    [Min(0f)]
-    [SerializeField] private float doorLaneSpread = 0.18f;
+        public Rigidbody pelvis;
 
-    [Min(0.1f)]
-    [SerializeField] private float doorClearDistance = 0.9f;
+        public Vector3 pelvisOffset;
 
-    [Min(0.1f)]
-    [SerializeField] private float minSpeedMultiplier = 0.65f;
+        public bool fallback;
 
-    [Min(0.1f)]
-    [SerializeField] private float maxSpeedMultiplier = 1.65f;
+        public readonly List<RagdollPart> parts =
+            new List<RagdollPart>();
+    }
 
-    [Range(0f, 1f)]
-    [SerializeField] private float flipChance = 0.9f;
-
-    [Min(1)]
-    [SerializeField] private int maxFlipTurns = 2;
-
-    [Min(0.1f)]
-    [SerializeField] private float burstPower = 1.6f;
+    private readonly List<RagdollNPC> ragdolls =
+        new List<RagdollNPC>();
 
     public float DoorWait => Mathf.Max(0f, doorWait);
-
-    // =====================================
-    // VALIDATE ENDING
-    // =====================================
 
     public bool IsReady
     {
@@ -126,22 +117,27 @@ public class ElevatorEnding : MonoBehaviour
     }
 
     // =====================================
-    // PLAY FINAL ENDING
+    // PLAY ENDING
     // =====================================
 
     public IEnumerator Play(List<NPCQueueAgent> passengers)
     {
-        if (!IsReady)
+        if (!IsReady || playing)
             yield break;
 
-        // Disable normal crowd collision
-        // during the final cinematic.
-        foreach (NPCBodyCollisionManager manager in
-                 FindObjectsByType<NPCBodyCollisionManager>(
-                     FindObjectsSortMode.None))
-        {
-            manager.enabled = false;
-        }
+        playing = true;
+
+        DisableGameplaySystems();
+
+        physicsRoot = new GameObject(
+            "Ending Full Ragdoll Physics"
+        );
+
+        ragdollLayer =
+            LayerMask.NameToLayer(physicsLayer);
+
+        if (ragdollLayer < 0)
+            ragdollLayer = 0;
 
         Vector3 forward =
             outsidePoint.position - doorPoint.position;
@@ -152,378 +148,1012 @@ public class ElevatorEnding : MonoBehaviour
         Vector3 right =
             Vector3.Cross(Vector3.up, forward).normalized;
 
-        List<Coroutine> activeLaunches =
-            new List<Coroutine>();
+        ragdolls.Clear();
 
-        int index = 0;
+        // Create real physical bodies for every NPC.
 
         foreach (NPCQueueAgent agent in passengers)
         {
             if (agent == null)
                 continue;
 
-            agent.LeaveQueue();
-            agent.SetGrabbed(false);
+            RagdollNPC ragdoll = CreateRagdoll(agent);
 
-            PassengerExitStatus status =
-                agent.GetComponent<PassengerExitStatus>();
-
-            // Hide EXIT / LATE during ending.
-            if (status != null)
-                status.enabled = false;
-
-            // Each NPC launches at a different time.
-            float delay =
-                Mathf.Min(index * launchStagger, 0.25f) +
-                Random.Range(0f, randomLaunchDelay);
-
-            // Random launch speed.
-            float speedMultiplier = Random.Range(
-                Mathf.Min(
-                    minSpeedMultiplier,
-                    maxSpeedMultiplier
-                ),
-                Mathf.Max(
-                    minSpeedMultiplier,
-                    maxSpeedMultiplier
-                )
-            );
-
-            float flightTime = Mathf.Max(
-                0.15f,
-                launchDuration /
-                Mathf.Max(0.1f, speedMultiplier)
-            );
-
-            Coroutine launch = StartCoroutine(
-                EjectPassenger(
-                    agent,
-                    forward,
-                    right,
-                    delay,
-                    flightTime
-                )
-            );
-
-            activeLaunches.Add(launch);
-
-            index++;
+            if (ragdoll != null)
+                ragdolls.Add(ragdoll);
         }
 
-        // Wait until every NPC finishes flying.
-        foreach (Coroutine launch in activeLaunches)
+        Physics.SyncTransforms();
+
+        // Release every ragdoll into physics.
+
+        foreach (RagdollNPC ragdoll in ragdolls)
         {
-            if (launch != null)
-                yield return launch;
+            LaunchRagdoll(
+                ragdoll,
+                forward,
+                right
+            );
         }
+
+        Debug.Log(
+            "[ENDING] Launched " +
+            ragdolls.Count +
+            " full physics passengers."
+        );
+
+        // No scripted destination.
+        // No scripted landing.
+        // Let physics do everything.
 
         yield return new WaitForSeconds(
-            Mathf.Max(0f, finishDelay)
+            Mathf.Max(1f, finishDelay)
+        );
+
+        SyncRagdollVisuals();
+
+        Physics.SyncTransforms();
+    }
+
+    // =====================================
+    // DISABLE NORMAL GAMEPLAY MOVEMENT
+    // =====================================
+
+    private void DisableGameplaySystems()
+    {
+        foreach (NPCBodyCollisionManager manager in
+                 FindObjectsByType<NPCBodyCollisionManager>(
+                     FindObjectsSortMode.None))
+        {
+            manager.enabled = false;
+        }
+
+        foreach (NPCWalkAwayManager manager in
+                 FindObjectsByType<NPCWalkAwayManager>(
+                     FindObjectsSortMode.None))
+        {
+            manager.enabled = false;
+        }
+
+        foreach (NPCSquishManager manager in
+                 FindObjectsByType<NPCSquishManager>(
+                     FindObjectsSortMode.None))
+        {
+            manager.enabled = false;
+        }
+    }
+
+    // =====================================
+    // CREATE FULL RAGDOLL
+    // =====================================
+
+    private RagdollNPC CreateRagdoll(
+        NPCQueueAgent agent)
+    {
+        Bounds originalBounds = GetOriginalBounds(agent);
+
+        float height = Mathf.Max(
+            0.5f,
+            originalBounds.size.y
+        );
+
+        agent.LeaveQueue();
+        agent.SetGrabbed(false);
+
+        Animator animator =
+            agent.GetComponentInChildren<Animator>(true);
+
+        // Stop normal character scripts.
+        // Only affects this NPC during the ending.
+
+        foreach (MonoBehaviour behaviour in
+                 agent.GetComponentsInChildren<MonoBehaviour>(true))
+        {
+            if (behaviour != null)
+                behaviour.enabled = false;
+        }
+
+        // Stop animation from overriding physics.
+
+        foreach (Animator a in
+                 agent.GetComponentsInChildren<Animator>(true))
+        {
+            a.applyRootMotion = false;
+            a.enabled = false;
+        }
+
+        // Disable the original gameplay colliders.
+
+        foreach (Collider c in
+                 agent.GetComponentsInChildren<Collider>(true))
+        {
+            c.enabled = false;
+        }
+
+        // Disable any old physical bodies.
+
+        foreach (Rigidbody rb in
+                 agent.GetComponentsInChildren<Rigidbody>(true))
+        {
+            rb.isKinematic = true;
+            rb.detectCollisions = false;
+        }
+
+        foreach (SkinnedMeshRenderer skin in
+                 agent.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+        {
+            skin.updateWhenOffscreen = true;
+        }
+
+        Transform root = agent.transform;
+
+        // Find the actual skeleton.
+
+        Transform hips = GetBone(
+            animator,
+            root,
+            HumanBodyBones.Hips,
+            "Hips", "Pelvis", "Hip"
+        );
+
+        Transform spine = GetBone(
+            animator,
+            root,
+            HumanBodyBones.Spine,
+            "Spine"
+        );
+
+        Transform chest = GetBone(
+            animator,
+            root,
+            HumanBodyBones.Chest,
+            "Chest", "Spine2", "Spine1"
+        );
+
+        Transform head = GetBone(
+            animator,
+            root,
+            HumanBodyBones.Head,
+            "Head"
+        );
+
+        if (chest == null)
+            chest = spine;
+
+        RagdollNPC ragdoll = new RagdollNPC
+        {
+            agent = agent
+        };
+
+        // Fallback for models without usable bones.
+        // Still uses real physics instead of animation.
+
+        if (hips == null ||
+            chest == null ||
+            head == null ||
+            hips == root ||
+            hips == chest ||
+            hips == head ||
+            chest == head)
+        {
+            Debug.LogWarning(
+                "[ENDING] Missing ragdoll bones: " +
+                agent.name +
+                ". Using whole-body physics."
+            );
+
+            return CreateFallback(
+                ragdoll,
+                originalBounds
+            );
+        }
+
+        ragdoll.pelvisOffset =
+            hips.position - root.position;
+
+        // =================================
+        // PELVIS
+        // =================================
+
+        RagdollPart pelvisPart = AddPart(
+            ragdoll,
+            hips,
+            chest,
+            null,
+            height * 0.12f,
+            5f
+        );
+
+        ragdoll.pelvis = pelvisPart.body;
+
+        // =================================
+        // CHEST
+        // =================================
+
+        RagdollPart chestPart = AddPart(
+            ragdoll,
+            chest,
+            head,
+            pelvisPart,
+            height * 0.14f,
+            4f
+        );
+
+        // =================================
+        // HEAD
+        // =================================
+
+        AddPart(
+            ragdoll,
+            head,
+            null,
+            chestPart,
+            height * 0.14f,
+            2f
+        );
+
+        // =================================
+        // LEFT ARM
+        // =================================
+
+        AddArm(
+            ragdoll,
+            animator,
+            root,
+            chestPart,
+            true,
+            height
+        );
+
+        // =================================
+        // RIGHT ARM
+        // =================================
+
+        AddArm(
+            ragdoll,
+            animator,
+            root,
+            chestPart,
+            false,
+            height
+        );
+
+        // =================================
+        // LEFT LEG
+        // =================================
+
+        AddLeg(
+            ragdoll,
+            animator,
+            root,
+            pelvisPart,
+            true,
+            height
+        );
+
+        // =================================
+        // RIGHT LEG
+        // =================================
+
+        AddLeg(
+            ragdoll,
+            animator,
+            root,
+            pelvisPart,
+            false,
+            height
+        );
+
+        // Prevent a ragdoll from exploding because
+        // its own colliders overlap.
+        //
+        // Different NPCs can still hit each other.
+
+        IgnoreSelfCollisions(ragdoll);
+
+        // Sync parent bones before child bones.
+
+        ragdoll.parts.Sort(
+            (a, b) =>
+                GetBoneDepth(a.bone).CompareTo(
+                    GetBoneDepth(b.bone)
+                )
+        );
+
+        if (ragdoll.parts.Count < 11)
+        {
+            Debug.LogWarning(
+                "[ENDING] Partial skeleton: " +
+                agent.name +
+                " | Parts: " +
+                ragdoll.parts.Count
+            );
+        }
+
+        return ragdoll;
+    }
+
+    // =====================================
+    // CREATE ARM PHYSICS
+    // =====================================
+
+    private void AddArm(
+        RagdollNPC ragdoll,
+        Animator animator,
+        Transform root,
+        RagdollPart parent,
+        bool left,
+        float height)
+    {
+        string side = left ? "Left" : "Right";
+
+        Transform upperArm = GetBone(
+            animator,
+            root,
+            left
+                ? HumanBodyBones.LeftUpperArm
+                : HumanBodyBones.RightUpperArm,
+            side + "UpperArm",
+            side + "Arm"
+        );
+
+        Transform forearm = GetBone(
+            animator,
+            root,
+            left
+                ? HumanBodyBones.LeftLowerArm
+                : HumanBodyBones.RightLowerArm,
+            side + "Forearm",
+            side + "LowerArm"
+        );
+
+        Transform hand = GetBone(
+            animator,
+            root,
+            left
+                ? HumanBodyBones.LeftHand
+                : HumanBodyBones.RightHand,
+            side + "Hand"
+        );
+
+        if (upperArm == null || forearm == null)
+            return;
+
+        RagdollPart upperPart = AddPart(
+            ragdoll,
+            upperArm,
+            forearm,
+            parent,
+            height * 0.045f,
+            1.2f
+        );
+
+        RagdollPart lowerPart = AddPart(
+            ragdoll,
+            forearm,
+            hand,
+            upperPart,
+            height * 0.04f,
+            0.8f
+        );
+
+        if (hand != null)
+        {
+            AddPart(
+                ragdoll,
+                hand,
+                null,
+                lowerPart,
+                height * 0.035f,
+                0.4f
+            );
+        }
+    }
+
+    // =====================================
+    // CREATE LEG PHYSICS
+    // =====================================
+
+    private void AddLeg(
+        RagdollNPC ragdoll,
+        Animator animator,
+        Transform root,
+        RagdollPart parent,
+        bool left,
+        float height)
+    {
+        string side = left ? "Left" : "Right";
+
+        Transform thigh = GetBone(
+            animator,
+            root,
+            left
+                ? HumanBodyBones.LeftUpperLeg
+                : HumanBodyBones.RightUpperLeg,
+            side + "Thigh",
+            side + "UpperLeg",
+            side + "UpLeg"
+        );
+
+        Transform shin = GetBone(
+            animator,
+            root,
+            left
+                ? HumanBodyBones.LeftLowerLeg
+                : HumanBodyBones.RightLowerLeg,
+            side + "Shin",
+            side + "LowerLeg",
+            side + "Leg",
+            side + "Calf"
+        );
+
+        Transform foot = GetBone(
+            animator,
+            root,
+            left
+                ? HumanBodyBones.LeftFoot
+                : HumanBodyBones.RightFoot,
+            side + "Foot"
+        );
+
+        if (thigh == null || shin == null)
+            return;
+
+        RagdollPart thighPart = AddPart(
+            ragdoll,
+            thigh,
+            shin,
+            parent,
+            height * 0.065f,
+            2.2f
+        );
+
+        RagdollPart shinPart = AddPart(
+            ragdoll,
+            shin,
+            foot,
+            thighPart,
+            height * 0.05f,
+            1.5f
+        );
+
+        if (foot != null)
+        {
+            AddPart(
+                ragdoll,
+                foot,
+                null,
+                shinPart,
+                height * 0.045f,
+                0.6f
+            );
+        }
+    }
+
+    // =====================================
+    // CREATE RIGIDBODY AND COLLIDER
+    // =====================================
+
+    private RagdollPart AddPart(
+        RagdollNPC ragdoll,
+        Transform bone,
+        Transform nextBone,
+        RagdollPart parent,
+        float radius,
+        float mass)
+    {
+        GameObject obj = new GameObject(
+            ragdoll.agent.name + "_" + bone.name
+        );
+
+        obj.layer = ragdollLayer;
+
+        obj.transform.SetParent(
+            physicsRoot.transform,
+            false
+        );
+
+        obj.transform.SetPositionAndRotation(
+            bone.position,
+            bone.rotation
+        );
+
+        Rigidbody body = obj.AddComponent<Rigidbody>();
+
+        ConfigureBody(body, mass);
+
+        radius = Mathf.Max(
+            0.025f,
+            radius * Mathf.Max(0.1f, colliderSize)
+        );
+
+        Collider collider;
+
+        if (nextBone != null &&
+            Vector3.Distance(
+                bone.position,
+                nextBone.position
+            ) > 0.01f)
+        {
+            Vector3 difference =
+                nextBone.position - bone.position;
+
+            GameObject shape = new GameObject("Collider");
+
+            shape.layer = ragdollLayer;
+
+            shape.transform.SetParent(
+                obj.transform,
+                false
+            );
+
+            shape.transform.localPosition =
+                obj.transform.InverseTransformVector(
+                    difference * 0.5f
+                );
+
+            shape.transform.localRotation =
+                Quaternion.FromToRotation(
+                    Vector3.up,
+                    obj.transform.InverseTransformDirection(
+                        difference.normalized
+                    )
+                );
+
+            CapsuleCollider capsule =
+                shape.AddComponent<CapsuleCollider>();
+
+            capsule.direction = 1;
+            capsule.radius = radius;
+
+            capsule.height = Mathf.Max(
+                radius * 2f,
+                difference.magnitude + radius
+            );
+
+            collider = capsule;
+        }
+        else
+        {
+            SphereCollider sphere =
+                obj.AddComponent<SphereCollider>();
+
+            sphere.radius = radius;
+
+            collider = sphere;
+        }
+
+        RagdollPart part = new RagdollPart
+        {
+            bone = bone,
+            body = body,
+            collider = collider
+        };
+
+        ragdoll.parts.Add(part);
+
+        if (parent != null)
+        {
+            CreateJoint(
+                body,
+                parent.body
+            );
+        }
+
+        return part;
+    }
+
+    // =====================================
+    // RIGIDBODY SETTINGS
+    // =====================================
+
+    private void ConfigureBody(
+        Rigidbody body,
+        float mass)
+    {
+        body.mass = mass;
+
+        body.isKinematic = true;
+        body.useGravity = true;
+
+        body.linearDamping = linearDamping;
+        body.angularDamping = angularDamping;
+
+        body.interpolation =
+            RigidbodyInterpolation.Interpolate;
+
+        body.collisionDetectionMode =
+            CollisionDetectionMode.ContinuousSpeculative;
+
+        body.maxAngularVelocity = 25f;
+
+        body.maxDepenetrationVelocity =
+            maxDepenetrationVelocity;
+
+        body.solverIterations = 8;
+        body.solverVelocityIterations = 4;
+
+        body.constraints = RigidbodyConstraints.None;
+    }
+
+    // =====================================
+    // REAL PHYSICAL JOINT
+    // =====================================
+
+    private void CreateJoint(
+        Rigidbody body,
+        Rigidbody parent)
+    {
+        CharacterJoint joint =
+            body.gameObject.AddComponent<CharacterJoint>();
+
+        joint.connectedBody = parent;
+
+        joint.anchor = Vector3.zero;
+        joint.autoConfigureConnectedAnchor = true;
+
+        joint.lowTwistLimit = new SoftJointLimit
+        {
+            limit = -60f
+        };
+
+        joint.highTwistLimit = new SoftJointLimit
+        {
+            limit = 60f
+        };
+
+        joint.swing1Limit = new SoftJointLimit
+        {
+            limit = 70f
+        };
+
+        joint.swing2Limit = new SoftJointLimit
+        {
+            limit = 70f
+        };
+
+        joint.enableCollision = false;
+
+        joint.enableProjection = true;
+        joint.projectionDistance = 0.12f;
+        joint.projectionAngle = 15f;
+
+        joint.enablePreprocessing = false;
+
+        joint.breakForce = Mathf.Infinity;
+        joint.breakTorque = Mathf.Infinity;
+    }
+
+    // =====================================
+    // EXPLOSIVE RANDOM FORCE
+    // =====================================
+
+    private void LaunchRagdoll(
+        RagdollNPC ragdoll,
+        Vector3 forward,
+        Vector3 right)
+    {
+        float launchForce = Random.Range(
+            Mathf.Min(minLaunchForce, maxLaunchForce),
+            Mathf.Max(minLaunchForce, maxLaunchForce)
+        );
+
+        float sideways = Random.Range(
+            -sideForce,
+            sideForce
+        );
+
+        float upward = Random.Range(
+            Mathf.Min(minUpForce, maxUpForce),
+            Mathf.Max(minUpForce, maxUpForce)
+        );
+
+        Vector3 velocity =
+            forward * launchForce +
+            right * sideways +
+            Vector3.up * upward;
+
+        // Activate every physical body first.
+
+        foreach (RagdollPart part in ragdoll.parts)
+        {
+            part.body.isKinematic = false;
+        }
+
+        // Apply real physical impulses.
+        // The physics engine controls movement
+        // from this point onward.
+
+        foreach (RagdollPart part in ragdoll.parts)
+        {
+            part.body.AddForce(
+                velocity,
+                ForceMode.VelocityChange
+            );
+
+            part.body.WakeUp();
+        }
+
+        // Random violent spin.
+
+        if (ragdoll.pelvis != null)
+        {
+            ragdoll.pelvis.AddTorque(
+                Random.onUnitSphere *
+                Random.Range(
+                    spinForce * 0.5f,
+                    spinForce
+                ),
+                ForceMode.VelocityChange
+            );
+        }
+
+        // Add random limb reactions.
+
+        foreach (RagdollPart part in ragdoll.parts)
+        {
+            if (part.body == ragdoll.pelvis)
+                continue;
+
+            part.body.AddTorque(
+                Random.onUnitSphere *
+                Random.Range(1f, spinForce * 0.6f),
+                ForceMode.VelocityChange
+            );
+        }
+    }
+
+    // =====================================
+    // IGNORE COLLISIONS WITH OWN BODY
+    // =====================================
+
+    private void IgnoreSelfCollisions(
+        RagdollNPC ragdoll)
+    {
+        for (int i = 0; i < ragdoll.parts.Count; i++)
+        {
+            for (int j = i + 1;
+                 j < ragdoll.parts.Count;
+                 j++)
+            {
+                Collider a =
+                    ragdoll.parts[i].collider;
+
+                Collider b =
+                    ragdoll.parts[j].collider;
+
+                if (a != null && b != null)
+                {
+                    Physics.IgnoreCollision(
+                        a,
+                        b,
+                        true
+                    );
+                }
+            }
+        }
+    }
+
+    // =====================================
+    // SYNC MODEL WITH REAL PHYSICS
+    // =====================================
+
+    private void LateUpdate()
+    {
+        if (!playing)
+            return;
+
+        SyncRagdollVisuals();
+    }
+
+    private void SyncRagdollVisuals()
+    {
+        foreach (RagdollNPC ragdoll in ragdolls)
+        {
+            if (ragdoll.agent == null ||
+                ragdoll.pelvis == null)
+            {
+                continue;
+            }
+
+            Transform root = ragdoll.agent.transform;
+
+            if (ragdoll.fallback)
+            {
+                root.SetPositionAndRotation(
+                    ragdoll.pelvis.transform.position,
+                    ragdoll.pelvis.transform.rotation
+                );
+
+                continue;
+            }
+
+            // Keep the NPC root near the physical pelvis
+            // for the existing scoring system.
+
+            root.position =
+                ragdoll.pelvis.transform.position -
+                ragdoll.pelvisOffset;
+
+            // Copy the actual physics pose.
+            // There is no standing or landing animation.
+
+            foreach (RagdollPart part in ragdoll.parts)
+            {
+                if (part.bone == null ||
+                    part.body == null)
+                {
+                    continue;
+                }
+
+                part.bone.SetPositionAndRotation(
+                    part.body.transform.position,
+                    part.body.transform.rotation
+                );
+            }
+        }
+    }
+
+    // =====================================
+    // FIND CHARACTER BONES
+    // =====================================
+
+    private Transform GetBone(
+        Animator animator,
+        Transform root,
+        HumanBodyBones humanoidBone,
+        params string[] names)
+    {
+        if (animator != null &&
+            animator.avatar != null &&
+            animator.avatar.isValid &&
+            animator.isHuman)
+        {
+            Transform bone =
+                animator.GetBoneTransform(humanoidBone);
+
+            if (bone != null)
+                return bone;
+        }
+
+        Transform[] transforms =
+            root.GetComponentsInChildren<Transform>(true);
+
+        foreach (Transform bone in transforms)
+        {
+            foreach (string boneName in names)
+            {
+                if (string.Equals(
+                    bone.name,
+                    boneName,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    return bone;
+                }
+
+                if (bone.name.EndsWith(
+                    ":" + boneName,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    return bone;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private int GetBoneDepth(Transform bone)
+    {
+        int depth = 0;
+
+        while (bone != null)
+        {
+            depth++;
+            bone = bone.parent;
+        }
+
+        return depth;
+    }
+
+    // =====================================
+    // ORIGINAL NPC BOUNDS
+    // =====================================
+
+    private Bounds GetOriginalBounds(
+        NPCQueueAgent agent)
+    {
+        CapsuleCollider capsule =
+            agent.GetComponent<CapsuleCollider>();
+
+        if (capsule == null)
+        {
+            capsule =
+                agent.GetComponentInChildren<CapsuleCollider>();
+        }
+
+        if (capsule != null && capsule.enabled)
+            return capsule.bounds;
+
+        return new Bounds(
+            agent.transform.position +
+            Vector3.up * 0.9f,
+            new Vector3(0.7f, 1.8f, 0.7f)
         );
     }
 
     // =====================================
-    // RANDOM CHAOTIC EJECTION
+    // FALLBACK: WHOLE BODY PHYSICS
     // =====================================
 
-    private IEnumerator EjectPassenger(
-        NPCQueueAgent agent,
-        Vector3 forward,
-        Vector3 right,
-        float delay,
-        float flightTime)
+    private RagdollNPC CreateFallback(
+        RagdollNPC ragdoll,
+        Bounds originalBounds)
     {
-        if (delay > 0f)
-            yield return new WaitForSeconds(delay);
-
-        if (agent == null)
-            yield break;
-
-        Transform npc = agent.transform;
-
-        Vector3 start = npc.position;
-        float groundY = start.y;
-
-        // Random position inside doorway.
-        float laneOffset = Random.Range(
-            -doorLaneSpread,
-            doorLaneSpread
+        GameObject obj = new GameObject(
+            ragdoll.agent.name + "_PhysicsBody"
         );
 
-        Vector3 lane =
-            right * laneOffset;
+        obj.layer = ragdollLayer;
 
-        // Move through the open doorway first.
-        Vector3 insidePoint =
-            doorPoint.position -
-            forward * 0.45f +
-            lane;
-
-        insidePoint.y = groundY;
-
-        Vector3 clearPoint =
-            doorPoint.position +
-            forward * doorClearDistance +
-            lane;
-
-        clearPoint.y = groundY;
-
-        // =====================================
-        // RANDOM LAUNCH DIRECTION
-        // =====================================
-
-        float sideOffset = Random.Range(
-            -sideSpread,
-            sideSpread
+        obj.transform.SetParent(
+            physicsRoot.transform,
+            false
         );
 
-        // Make some NPCs fly extremely sideways.
-        if (Random.value < 0.45f)
-        {
-            float sideSign =
-                Random.value < 0.5f ? -1f : 1f;
-
-            sideOffset =
-                sideSign *
-                Random.Range(
-                    sideSpread * 0.65f,
-                    sideSpread
-                );
-        }
-
-        float forwardDistance = Random.Range(
-            0f,
-            extraDistance
+        obj.transform.SetPositionAndRotation(
+            ragdoll.agent.transform.position,
+            ragdoll.agent.transform.rotation
         );
 
-        Vector3 landingPoint =
-            outsidePoint.position +
-            forward * forwardDistance +
-            right * sideOffset;
+        Rigidbody body =
+            obj.AddComponent<Rigidbody>();
 
-        landingPoint.y = groundY;
+        ConfigureBody(body, 12f);
 
-        Quaternion facing =
-            Quaternion.LookRotation(forward);
+        CapsuleCollider capsule =
+            obj.AddComponent<CapsuleCollider>();
 
-        Quaternion initialRotation = npc.rotation;
+        capsule.center =
+            obj.transform.InverseTransformPoint(
+                originalBounds.center
+            );
 
-        // =====================================
-        // RANDOM JUMP HEIGHT
-        // =====================================
-
-        float jumpHeight = Random.Range(
-            Mathf.Min(
-                jumpHeightMin,
-                jumpHeightMax
-            ),
+        capsule.radius = Mathf.Max(
+            0.1f,
             Mathf.Max(
-                jumpHeightMin,
-                jumpHeightMax
+                originalBounds.extents.x,
+                originalBounds.extents.z
             )
         );
 
-        // =====================================
-        // RANDOM 3D ROTATION
-        // =====================================
-
-        float finalYaw = Random.Range(-180f, 180f);
-
-        int maxYawTurns = Mathf.Max(
-            0,
-            Mathf.FloorToInt(spinDegrees / 360f)
+        capsule.height = Mathf.Max(
+            originalBounds.size.y,
+            capsule.radius * 2f
         );
 
-        float yawSpin =
-            Random.Range(-maxYawTurns, maxYawTurns + 1)
-            * 360f + finalYaw;
-
-        float pitchSpin = 0f;
-        float rollSpin = 0f;
-
-        if (Random.value < flipChance)
-        {
-            int turns = Random.Range(
-                1,
-                Mathf.Max(1, maxFlipTurns) + 1
-            );
-
-            float sign =
-                Random.value < 0.5f ? -1f : 1f;
-
-            pitchSpin =
-                turns * 360f * sign;
-        }
-
-        if (Random.value < flipChance)
-        {
-            int turns = Random.Range(
-                1,
-                Mathf.Max(1, maxFlipTurns) + 1
-            );
-
-            float sign =
-                Random.value < 0.5f ? -1f : 1f;
-
-            rollSpin =
-                turns * 360f * sign;
-        }
-
-        // =====================================
-        // MOVE TO DOOR QUICKLY
-        // =====================================
-
-        float elapsed = 0f;
-
-        float duration =
-            Mathf.Max(0.05f, gatherDuration);
-
-        while (elapsed < duration)
-        {
-            if (agent == null)
-                yield break;
-
-            elapsed += Time.deltaTime;
-
-            float p =
-                Mathf.Clamp01(elapsed / duration);
-
-            npc.position = Vector3.Lerp(
-                start,
-                insidePoint,
-                p
-            );
-
-            npc.rotation = Quaternion.Slerp(
-                initialRotation,
-                facing,
-                p
-            );
-
-            yield return null;
-        }
-
-        // =====================================
-        // BURST THROUGH THE DOOR
-        // =====================================
-
-        elapsed = 0f;
-
-        duration =
-            Mathf.Max(0.05f, doorCrossDuration);
-
-        while (elapsed < duration)
-        {
-            if (agent == null)
-                yield break;
-
-            elapsed += Time.deltaTime;
-
-            float p =
-                Mathf.Clamp01(elapsed / duration);
-
-            npc.position = Vector3.Lerp(
-                insidePoint,
-                clearPoint,
-                p
-            );
-
-            yield return null;
-        }
-
-        // =====================================
-        // EXISTING LIMB RAGDOLL
-        // =====================================
-
-        PassengerRagdoll ragdoll =
-            agent.GetComponent<PassengerRagdoll>();
-
-        if (ragdoll == null)
-        {
-            ragdoll =
-                agent.gameObject
-                    .AddComponent<PassengerRagdoll>();
-        }
-
-        Vector3 launchDirection =
-            (landingPoint - clearPoint).normalized;
-
-        ragdoll.Jolt(launchDirection, 1f);
-
-        // =====================================
-        // EXTREME CHAOTIC FLIGHT
-        // =====================================
-
-        elapsed = 0f;
-
-        while (elapsed < flightTime)
-        {
-            if (agent == null)
-                yield break;
-
-            elapsed += Time.deltaTime;
-
-            float p =
-                Mathf.Clamp01(elapsed / flightTime);
-
-            // Fast initial burst, slower near landing.
-            float burstProgress =
-                1f - Mathf.Pow(
-                    1f - p,
-                    Mathf.Max(0.1f, burstPower)
-                );
-
-            Vector3 position = Vector3.Lerp(
-                clearPoint,
-                landingPoint,
-                burstProgress
-            );
-
-            // Strong airborne arc.
-            float arc =
-                4f * p * (1f - p);
-
-            position.y =
-                groundY + arc * jumpHeight;
-
-            npc.position = position;
-
-            // Spin around all three axes.
-            npc.rotation =
-                facing *
-                Quaternion.Euler(
-                    pitchSpin * p,
-                    yawSpin * p,
-                    rollSpin * p
-                );
-
-            yield return null;
-        }
-
-        // =====================================
-        // LANDING
-        // =====================================
-
-        if (agent != null)
-        {
-            npc.position = landingPoint;
-
-            npc.rotation =
-                facing *
-                Quaternion.Euler(
-                    0f,
-                    finalYaw,
-                    0f
-                );
-
-            // Extra limb reaction on landing.
-            if (ragdoll != null)
+        ragdoll.parts.Add(
+            new RagdollPart
             {
-                ragdoll.Jolt(
-                    -launchDirection,
-                    1f
-                );
+                bone = ragdoll.agent.transform,
+                body = body,
+                collider = capsule
             }
-        }
+        );
+
+        ragdoll.pelvis = body;
+        ragdoll.fallback = true;
+
+        return ragdoll;
+    }
+
+    // =====================================
+    // CLEANUP WHEN SCENE IS DESTROYED
+    // =====================================
+
+    private void OnDestroy()
+    {
+        if (physicsRoot != null)
+            Destroy(physicsRoot);
     }
 }

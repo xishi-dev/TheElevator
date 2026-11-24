@@ -20883,6 +20883,9 @@ MonoBehaviour:
   waitBeforeWalking: 1
   walkSpeed: 1.7
   rotateSpeed: 360
+  failedBoardingWait: 1
+  failedBoardingSpeed: 9
+  failedBoardingRotateSpeed: 1080
   minWalkDistance: 2
   screenMargin: 0.15
   maxWalkTime: 25
@@ -41243,24 +41246,18 @@ MonoBehaviour:
   doorPoint: {fileID: 918761842}
   outsidePoint: {fileID: 1064600148}
   doorWait: 0.5
-  gatherDuration: 0.18
-  doorCrossDuration: 0.1
-  launchDuration: 0.55
-  launchStagger: 0.025
-  finishDelay: 2.5
-  sideSpread: 3.2
-  extraDistance: 2.5
-  jumpHeightMin: 0.8
-  jumpHeightMax: 2.2
-  spinDegrees: 720
-  randomLaunchDelay: 0.2
-  doorLaneSpread: 0.18
-  doorClearDistance: 0.9
-  minSpeedMultiplier: 0.65
-  maxSpeedMultiplier: 1.65
-  flipChance: 0.9
-  maxFlipTurns: 2
-  burstPower: 1.6
+  finishDelay: 6
+  minLaunchForce: 10
+  maxLaunchForce: 17
+  sideForce: 4.5
+  minUpForce: 2
+  maxUpForce: 5
+  spinForce: 10
+  colliderSize: 1
+  linearDamping: 0.05
+  angularDamping: 0.15
+  maxDepenetrationVelocity: 10
+  physicsLayer: Default
 --- !u!4 &175595880
 Transform:
   m_ObjectHideFlags: 0
@@ -129863,6 +129860,7 @@ GameObject:
   m_Component:
   - component: {fileID: 538871561}
   - component: {fileID: 538871562}
+  - component: {fileID: 538871563}
   m_Layer: 0
   m_Name: NPCGrabManager
   m_TagString: Untagged
@@ -129921,6 +129919,19 @@ MonoBehaviour:
   invertScrollDirection: 0
   collisionSkin: 0.03
   switchCameraOnRelease: 1
+--- !u!114 &538871563
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 538871560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c73401500f4347d408243d7c30a24465, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCGrabRotation
+  rotationAngle: 90
 --- !u!1 &538875651
 GameObject:
   m_ObjectHideFlags: 0
@@ -445635,43 +445646,43 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FloorProgressionManager
   floors:
   - floorName: Floor_01
-    stopPoint: {fileID: 973050615}
+    stopPoint: {fileID: 6263246795556625252}
     doorController: {fileID: 14587096}
     spawnPoint: {fileID: 1864729617}
     queueStart: {fileID: 55384069}
     roundSeconds: 15
   - floorName: Floor_02
-    stopPoint: {fileID: 919265977}
+    stopPoint: {fileID: 715722307}
     doorController: {fileID: 1453128125}
     spawnPoint: {fileID: 103448503}
     queueStart: {fileID: 581495557}
     roundSeconds: 15
   - floorName: Floor_03
-    stopPoint: {fileID: 2090355478}
+    stopPoint: {fileID: 475508450}
     doorController: {fileID: 36836346}
     spawnPoint: {fileID: 4485846}
     queueStart: {fileID: 490457349}
     roundSeconds: 15
   - floorName: Floor_04
-    stopPoint: {fileID: 1902063349}
+    stopPoint: {fileID: 822521320}
     doorController: {fileID: 339224938}
     spawnPoint: {fileID: 691624082}
     queueStart: {fileID: 516705092}
     roundSeconds: 10
   - floorName: Floor_05
-    stopPoint: {fileID: 1268286540}
+    stopPoint: {fileID: 860491697}
     doorController: {fileID: 109187845}
     spawnPoint: {fileID: 11774525}
     queueStart: {fileID: 27701761}
     roundSeconds: 10
   - floorName: Floor_06
-    stopPoint: {fileID: 191380993}
+    stopPoint: {fileID: 1967262539}
     doorController: {fileID: 100724350}
     spawnPoint: {fileID: 865114714}
     queueStart: {fileID: 673630442}
     roundSeconds: 10
   - floorName: Floor_07
-    stopPoint: {fileID: 33683820}
+    stopPoint: {fileID: 1392941014}
     doorController: {fileID: 1179749258}
     spawnPoint: {fileID: 544484357}
     queueStart: {fileID: 320086530}
