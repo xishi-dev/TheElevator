@@ -69,7 +69,14 @@ public class NPCBodyCollisionManager : MonoBehaviour
                 }
             }
         }
+
+        Physics.SyncTransforms();
     }
+
+    // =====================================
+    // FIND NPC BODIES
+    // =====================================
+
     private void ScanNPCs()
     {
         bodies.Clear();
@@ -106,6 +113,11 @@ public class NPCBodyCollisionManager : MonoBehaviour
             });
         }
     }
+
+    // =====================================
+    // NPC COLLISION - ORIGINAL SYSTEM
+    // =====================================
+
     private void ResolveCollision(
         NPCBody a,
         NPCBody b)
@@ -135,6 +147,7 @@ public class NPCBodyCollisionManager : MonoBehaviour
         Vector3 centerB = GetCenter(b.capsule);
 
         Vector3 difference = centerB - centerA;
+
         difference.y = 0f;
 
         float distance = difference.magnitude;
@@ -158,7 +171,10 @@ public class NPCBodyCollisionManager : MonoBehaviour
         {
             direction = Vector3.right;
         }
+
         float overlap = requiredDistance - distance;
+
+        // Preserve original grabbed NPC behavior.
 
         if (a.agent.IsGrabbed &&
             !b.agent.IsGrabbed)
@@ -171,6 +187,7 @@ public class NPCBodyCollisionManager : MonoBehaviour
 
             return;
         }
+
         if (b.agent.IsGrabbed &&
             !a.agent.IsGrabbed)
         {
@@ -182,6 +199,7 @@ public class NPCBodyCollisionManager : MonoBehaviour
 
             return;
         }
+
         if (a.agent.IsInQueue)
         {
             TryPush(b, direction * overlap);
@@ -205,6 +223,7 @@ public class NPCBodyCollisionManager : MonoBehaviour
             b,
             direction * half
         );
+
         float remaining =
             overlap - movedA - movedB;
 
@@ -226,6 +245,7 @@ public class NPCBodyCollisionManager : MonoBehaviour
             );
         }
     }
+
     private void PushWithFallback(
         NPCBody first,
         Vector3 firstDirection,
@@ -248,6 +268,11 @@ public class NPCBodyCollisionManager : MonoBehaviour
             );
         }
     }
+
+    // =====================================
+    // NEW: SAFE NPC PUSH
+    // =====================================
+
     private float TryPush(
         NPCBody body,
         Vector3 movement)
@@ -269,46 +294,345 @@ public class NPCBodyCollisionManager : MonoBehaviour
 
         Vector3 direction = movement.normalized;
 
-        if (wallLayers.value != 0)
-        {
-            Physics.SyncTransforms();
+        Physics.SyncTransforms();
 
-            GetWorldCapsule(
-                body.capsule,
-                out Vector3 point1,
-                out Vector3 point2,
-                out float radius
+        // Use the actual physical capsule.
+        // Do not shrink wall collision using
+        // bodyRadiusScale.
+
+        GetWorldCapsule(
+            body.capsule,
+            out Vector3 point1,
+            out Vector3 point2,
+            out float radius
+        );
+
+        float feetY = body.capsule.bounds.min.y;
+
+        float skin = Mathf.Max(0f, wallSkin);
+
+        // If no Wall Layers are assigned,
+        // still check solid colliders.
+
+        int mask = wallLayers.value != 0
+            ? wallLayers.value
+            : ~0;
+
+        // =================================
+        // CHECK EXISTING WALL OVERLAPS
+        // =================================
+
+        Collider[] currentOverlaps =
+            Physics.OverlapCapsule(
+                point1,
+                point2,
+                radius,
+                mask,
+                QueryTriggerInteraction.Ignore
             );
 
-            // หยุดก่อนชนกำแพง
-            if (Physics.CapsuleCast(
+        foreach (Collider obstacle in currentOverlaps)
+        {
+            if (!IsWallObstacle(
+                body,
+                obstacle,
+                feetY))
+            {
+                continue;
+            }
+
+            if (GetWallPenetration(
+                body,
+                obstacle,
+                Vector3.zero,
+                out Vector3 escapeDirection,
+                out float penetration))
+            {
+                if (penetration > 0.001f)
+                {
+                    // Never push an NPC deeper
+                    // into a wall it already touches.
+
+                    if (Vector3.Dot(
+                        direction,
+                        escapeDirection
+                    ) <= 0.0001f)
+                    {
+                        return 0f;
+                    }
+                }
+            }
+        }
+
+        // =================================
+        // CHECK THE ENTIRE MOVEMENT PATH
+        // =================================
+
+        RaycastHit[] hits =
+            Physics.CapsuleCastAll(
                 point1,
                 point2,
                 radius,
                 direction,
-                out RaycastHit hit,
-                allowed + wallSkin,
-                wallLayers,
-                QueryTriggerInteraction.Ignore))
+                allowed + skin,
+                mask,
+                QueryTriggerInteraction.Ignore
+            );
+
+        foreach (RaycastHit hit in hits)
+        {
+            if (!IsWallObstacle(
+                body,
+                hit.collider,
+                feetY))
             {
-                allowed = Mathf.Clamp(
-                    hit.distance - wallSkin,
-                    0f,
-                    allowed
-                );
+                continue;
             }
+
+            // Allow escaping an existing
+            // wall overlap, but never moving
+            // further into the wall.
+
+            if (hit.distance <= 0.001f)
+            {
+                bool alreadyOverlapping =
+                    GetWallPenetration(
+                        body,
+                        hit.collider,
+                        Vector3.zero,
+                        out Vector3 escapeDirection,
+                        out float penetration
+                    );
+
+                if (alreadyOverlapping &&
+                    penetration > 0.001f &&
+                    Vector3.Dot(
+                        direction,
+                        escapeDirection
+                    ) > 0.0001f)
+                {
+                    continue;
+                }
+            }
+
+            float safeDistance = Mathf.Max(
+                0f,
+                hit.distance - skin
+            );
+
+            allowed = Mathf.Min(
+                allowed,
+                safeDistance
+            );
         }
 
-        if (allowed <= 0f)
+        if (allowed <= 0.0001f)
             return 0f;
 
-        body.agent.transform.position +=
-            direction * allowed;
+        // =================================
+        // FINAL POSITION VALIDATION
+        // =================================
 
-        Physics.SyncTransforms();
+        // A capsule cast alone may not catch
+        // existing overlaps or crowded corners.
+        //
+        // Check the destination before moving.
+        // If blocked, try a smaller movement.
 
-        return allowed;
+        for (int attempt = 0;
+             attempt < 7;
+             attempt++)
+        {
+            if (allowed <= 0.0001f)
+                return 0f;
+
+            Vector3 displacement =
+                direction * allowed;
+
+            if (IsDestinationSafe(
+                body,
+                point1,
+                point2,
+                radius,
+                feetY,
+                mask,
+                displacement))
+            {
+                body.agent.transform.position +=
+                    displacement;
+
+                Physics.SyncTransforms();
+
+                return allowed;
+            }
+
+            allowed *= 0.5f;
+        }
+
+        // No safe movement.
+        // Allow crowd overlap instead of
+        // forcing an NPC through a wall.
+
+        return 0f;
     }
+
+    // =====================================
+    // NEW: FILTER SOLID WALLS
+    // =====================================
+
+    private bool IsWallObstacle(
+        NPCBody body,
+        Collider obstacle,
+        float feetY)
+    {
+        if (obstacle == null ||
+            !obstacle.enabled ||
+            obstacle.isTrigger)
+        {
+            return false;
+        }
+
+        // Ignore the NPC's own colliders.
+
+        if (obstacle == body.capsule ||
+            obstacle.transform.IsChildOf(
+                body.agent.transform
+            ))
+        {
+            return false;
+        }
+
+        // Other NPCs are handled by the
+        // original crowd collision solver.
+
+        if (obstacle.GetComponentInParent<NPCQueueAgent>()
+            != null)
+        {
+            return false;
+        }
+
+        // Ignore the floor underneath the NPC.
+
+        if (obstacle.bounds.max.y <= feetY + 0.05f)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    // =====================================
+    // NEW: WALL PENETRATION TEST
+    // =====================================
+
+    private bool GetWallPenetration(
+        NPCBody body,
+        Collider obstacle,
+        Vector3 displacement,
+        out Vector3 escapeDirection,
+        out float penetration)
+    {
+        escapeDirection = Vector3.zero;
+        penetration = 0f;
+
+        if (!IsValid(body) || obstacle == null)
+            return false;
+
+        Transform capsuleTransform =
+            body.capsule.transform;
+
+        return Physics.ComputePenetration(
+            body.capsule,
+            capsuleTransform.position + displacement,
+            capsuleTransform.rotation,
+            obstacle,
+            obstacle.transform.position,
+            obstacle.transform.rotation,
+            out escapeDirection,
+            out penetration
+        );
+    }
+
+    // =====================================
+    // NEW: VALIDATE DESTINATION
+    // =====================================
+
+    private bool IsDestinationSafe(
+        NPCBody body,
+        Vector3 point1,
+        Vector3 point2,
+        float radius,
+        float feetY,
+        int mask,
+        Vector3 displacement)
+    {
+        Collider[] destinationOverlaps =
+            Physics.OverlapCapsule(
+                point1 + displacement,
+                point2 + displacement,
+                radius,
+                mask,
+                QueryTriggerInteraction.Ignore
+            );
+
+        foreach (Collider obstacle in destinationOverlaps)
+        {
+            if (!IsWallObstacle(
+                body,
+                obstacle,
+                feetY))
+            {
+                continue;
+            }
+
+            bool destinationPenetrates =
+                GetWallPenetration(
+                    body,
+                    obstacle,
+                    displacement,
+                    out Vector3 destinationDirection,
+                    out float destinationDepth
+                );
+
+            if (!destinationPenetrates ||
+                destinationDepth <= 0.0001f)
+            {
+                continue;
+            }
+
+            bool alreadyPenetrating =
+                GetWallPenetration(
+                    body,
+                    obstacle,
+                    Vector3.zero,
+                    out Vector3 currentEscapeDirection,
+                    out float currentDepth
+                );
+
+            // Only allow overlap if the NPC
+            // is already inside the wall slightly
+            // and this move reduces penetration.
+
+            if (alreadyPenetrating &&
+                destinationDepth < currentDepth - 0.0001f &&
+                Vector3.Dot(
+                    displacement,
+                    currentEscapeDirection
+                ) > 0f)
+            {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    // =====================================
+    // WORLD CAPSULE
+    // =====================================
+
     private void GetWorldCapsule(
         CapsuleCollider capsule,
         out Vector3 point1,
@@ -316,6 +640,7 @@ public class NPCBodyCollisionManager : MonoBehaviour
         out float radius)
     {
         Transform t = capsule.transform;
+
         Vector3 s = t.lossyScale;
 
         Vector3 axis;
@@ -353,11 +678,12 @@ public class NPCBodyCollisionManager : MonoBehaviour
             );
         }
 
+        // Use the real collider radius
+        // for wall protection.
+
         radius = Mathf.Max(
             0.01f,
-            capsule.radius *
-            radiusScale *
-            bodyRadiusScale
+            capsule.radius * radiusScale
         );
 
         float height = Mathf.Max(
@@ -377,6 +703,10 @@ public class NPCBodyCollisionManager : MonoBehaviour
         point2 = center - axis * halfSegment;
     }
 
+    // =====================================
+    // ORIGINAL NPC CENTER
+    // =====================================
+
     private Vector3 GetCenter(
         CapsuleCollider capsule)
     {
@@ -384,10 +714,16 @@ public class NPCBodyCollisionManager : MonoBehaviour
             capsule.center
         );
     }
+
+    // =====================================
+    // ORIGINAL NPC CROWD RADIUS
+    // =====================================
+
     private float GetRadius(
         CapsuleCollider capsule)
     {
-        Vector3 scale = capsule.transform.lossyScale;
+        Vector3 scale =
+            capsule.transform.lossyScale;
 
         float radiusScale;
 
@@ -420,6 +756,11 @@ public class NPCBodyCollisionManager : MonoBehaviour
             bodyRadiusScale
         );
     }
+
+    // =====================================
+    // ORIGINAL VALIDATION
+    // =====================================
+
     private bool IsValid(NPCBody body)
     {
         return body != null &&

@@ -97,6 +97,12 @@ public class FloorProgressionManager : MonoBehaviour
     [Header("Temporary Phase HUD")]
     [SerializeField] private bool showPhaseOverlay = true;
 
+    [Header("Final Floor Ending")]
+    [SerializeField] private bool useFinalFloorEnding = true;
+    [SerializeField] private ElevatorEnding ending;
+
+    private bool playingEnding;
+
     private int floorIndex;
     private int score;
     private int boardedCount;
@@ -117,6 +123,9 @@ public class FloorProgressionManager : MonoBehaviour
     private float phaseBannerEndTime;
 
     private bool simpleSuccessBanner;
+
+    private bool floorTextHiddenForLoading;
+    private bool floorTextWasEnabled;
 
     private GUIStyle phaseStyle;
     private GUIStyle bannerStyle;
@@ -144,6 +153,8 @@ public class FloorProgressionManager : MonoBehaviour
     public int ComboCount => comboCount;
     public int MaxCombo => maxCombo;
 
+    public bool IsPlayingEnding => playingEnding;
+
     // =====================================
     // EVENTS
     // =====================================
@@ -151,22 +162,16 @@ public class FloorProgressionManager : MonoBehaviour
     private void OnEnable()
     {
         if (countdown != null)
-        {
             countdown.OnCountdownFinished += OnTimeUp;
-        }
     }
 
     private void OnDisable()
     {
         if (countdown != null)
-        {
             countdown.OnCountdownFinished -= OnTimeUp;
-        }
 
         if (grabController != null)
-        {
             grabController.CanGrabPassenger = null;
-        }
     }
 
     // =====================================
@@ -196,6 +201,8 @@ public class FloorProgressionManager : MonoBehaviour
         unloadHasTargets = false;
         phaseBannerActive = false;
         simpleSuccessBanner = false;
+        playingEnding = false;
+
         phase = FloorPhase.Boarding;
 
         countdown.StopCountdown();
@@ -205,9 +212,7 @@ public class FloorProgressionManager : MonoBehaviour
         grabController.CanGrabPassenger = null;
 
         if (finishPanel != null)
-        {
             finishPanel.SetActive(false);
-        }
 
         if (blackFade != null)
         {
@@ -216,15 +221,15 @@ public class FloorProgressionManager : MonoBehaviour
             blackFade.gameObject.SetActive(false);
         }
 
+        SetFloorTextLoadingHidden(false);
+
         for (int i = 0; i < floors.Length; i++)
         {
             ElevatorDoorController door =
                 floors[i].doorController;
 
             if (door != null && i != 0)
-            {
                 door.CloseDoors();
-            }
         }
 
         FloorSetup first = floors[0];
@@ -305,10 +310,8 @@ public class FloorProgressionManager : MonoBehaviour
     {
         UpdateScorePopups();
 
-        if (finished || transitioning)
-        {
+        if (finished || transitioning || playingEnding)
             return;
-        }
 
         UpdatePassengerStates();
 
@@ -329,9 +332,7 @@ public class FloorProgressionManager : MonoBehaviour
         Color color)
     {
         if (!showScoreFeedback)
-        {
             return;
-        }
 
         scorePopups.Add(new ScorePopup
         {
@@ -341,9 +342,7 @@ public class FloorProgressionManager : MonoBehaviour
         });
 
         while (scorePopups.Count > 5)
-        {
             scorePopups.RemoveAt(0);
-        }
     }
 
     private void UpdateScorePopups()
@@ -356,9 +355,7 @@ public class FloorProgressionManager : MonoBehaviour
                 Time.unscaledTime - scorePopups[i].createdAt;
 
             if (age >= duration)
-            {
                 scorePopups.RemoveAt(i);
-            }
         }
     }
 
@@ -371,12 +368,10 @@ public class FloorProgressionManager : MonoBehaviour
         comboCount++;
 
         if (comboCount > maxCombo)
-        {
             maxCombo = comboCount;
-        }
 
-        int bonus = (comboCount - 1) *
-                    Mathf.Max(0, comboBonusStep);
+        int bonus =
+            (comboCount - 1) * Mathf.Max(0, comboBonusStep);
 
         return Mathf.Min(
             bonus,
@@ -406,9 +401,7 @@ public class FloorProgressionManager : MonoBehaviour
     private void UpdatePassengerStates()
     {
         if (phase == FloorPhase.Unloading)
-        {
             Physics.SyncTransforms();
-        }
 
         NPCQueueAgent[] agents =
             FindObjectsByType<NPCQueueAgent>(
@@ -418,9 +411,7 @@ public class FloorProgressionManager : MonoBehaviour
         foreach (NPCQueueAgent agent in agents)
         {
             if (agent == null)
-            {
                 continue;
-            }
 
             bool inside = IsInsideElevator(agent);
 
@@ -434,9 +425,7 @@ public class FloorProgressionManager : MonoBehaviour
             }
 
             if (status == null)
-            {
                 continue;
-            }
 
             // BOARDING SCORE
 
@@ -469,9 +458,6 @@ public class FloorProgressionManager : MonoBehaviour
 
             if (phase == FloorPhase.Unloading)
             {
-                // Require the entire NPC body
-                // to clear the elevator zone.
-
                 if (status.IsPending &&
                     !inside &&
                     !agent.IsGrabbed &&
@@ -483,17 +469,19 @@ public class FloorProgressionManager : MonoBehaviour
 
                     deliveredCount++;
 
-                    int comboBonus = RegisterSuccessfulExit();
-                    int earnedPoints = unloadingPoints + comboBonus;
+                    int comboBonus =
+                        RegisterSuccessfulExit();
+
+                    int earnedPoints =
+                        unloadingPoints + comboBonus;
 
                     score += earnedPoints;
 
-                    string popupText = "+" + earnedPoints + " EXIT";
+                    string popupText =
+                        "+" + earnedPoints + " EXIT";
 
                     if (comboCount >= 2)
-                    {
                         popupText += "  COMBO x" + comboCount;
-                    }
 
                     AddScoreFeedback(
                         popupText,
@@ -512,7 +500,6 @@ public class FloorProgressionManager : MonoBehaviour
             }
 
             // No per-second LATE penalty.
-            // Penalties are applied at phase end.
         }
 
         UpdateFloorText();
@@ -534,9 +521,7 @@ public class FloorProgressionManager : MonoBehaviour
         foreach (PassengerExitStatus status in statuses)
         {
             if (status != null && status.IsPending)
-            {
                 count++;
-            }
         }
 
         return count;
@@ -549,9 +534,7 @@ public class FloorProgressionManager : MonoBehaviour
     private int GetMissCount(PassengerExitStatus status)
     {
         if (status == null)
-        {
             return 1;
-        }
 
         return Mathf.Max(
             1,
@@ -564,14 +547,10 @@ public class FloorProgressionManager : MonoBehaviour
         int missCount = GetMissCount(status);
 
         if (missCount == 1)
-        {
             return firstMissPenalty;
-        }
 
         if (missCount == 2)
-        {
             return secondMissPenalty;
-        }
 
         return secondMissPenalty +
                (missCount - 2) * additionalMissIncrease;
@@ -586,23 +565,16 @@ public class FloorProgressionManager : MonoBehaviour
         phase = FloorPhase.Boarding;
         unloadHasTargets = false;
 
-        // LATE passengers cannot be grabbed
-        // during BOARDING.
-
         grabController.CanGrabPassenger = agent =>
         {
             if (agent == null)
-            {
                 return false;
-            }
 
             PassengerExitStatus status =
                 agent.GetComponent<PassengerExitStatus>();
 
             if (status == null)
-            {
                 return true;
-            }
 
             return !status.IsOverdue;
         };
@@ -616,7 +588,6 @@ public class FloorProgressionManager : MonoBehaviour
         );
 
         countdown.StartCountdown(duration);
-
         UpdateFloorText();
 
         Debug.Log(
@@ -639,9 +610,7 @@ public class FloorProgressionManager : MonoBehaviour
         foreach (NPCQueueAgent agent in passengers)
         {
             if (agent == null)
-            {
                 continue;
-            }
 
             PassengerExitStatus status =
                 agent.GetComponent<PassengerExitStatus>();
@@ -653,9 +622,7 @@ public class FloorProgressionManager : MonoBehaviour
             }
 
             if (status.IsPending)
-            {
                 continue;
-            }
 
             if (status.State ==
                 PassengerExitStatus.ExitState.Delivered)
@@ -668,33 +635,25 @@ public class FloorProgressionManager : MonoBehaviour
                 Random.value < exitChance;
 
             if (mustExit)
-            {
                 status.RequestExit(CurrentFloor);
-            }
         }
 
-        // Allow normal passengers to move
-        // during UNLOADING to clear the exit.
+        // Normal passengers can still be moved
+        // to clear the elevator exit.
 
         grabController.CanGrabPassenger = agent =>
         {
             if (agent == null)
-            {
                 return false;
-            }
 
             PassengerExitStatus status =
                 agent.GetComponent<PassengerExitStatus>();
 
             if (status == null)
-            {
                 return false;
-            }
 
             if (status.IsPending)
-            {
                 return true;
-            }
 
             return status.HasBoarded &&
                    !agent.IsInQueue &&
@@ -711,7 +670,6 @@ public class FloorProgressionManager : MonoBehaviour
             : Mathf.Max(1f, noExitSeconds);
 
         countdown.StartCountdown(duration);
-
         UpdateFloorText();
 
         Debug.Log(
@@ -727,19 +685,13 @@ public class FloorProgressionManager : MonoBehaviour
 
     private void OnTimeUp()
     {
-        if (transitioning || finished)
-        {
+        if (transitioning || finished || playingEnding)
             return;
-        }
 
         if (phase == FloorPhase.Unloading)
-        {
             StartCoroutine(FinishUnloading());
-        }
         else
-        {
             StartCoroutine(FinishBoardingAndTravel());
-        }
     }
 
     // =====================================
@@ -773,17 +725,13 @@ public class FloorProgressionManager : MonoBehaviour
         foreach (PassengerExitStatus status in statuses)
         {
             if (status == null || !status.IsPending)
-            {
                 continue;
-            }
 
             NPCQueueAgent agent =
                 status.GetComponent<NPCQueueAgent>();
 
             if (agent == null)
-            {
                 continue;
-            }
 
             int missNumber = GetMissCount(status);
             int penalty = CalculateMissPenalty(status);
@@ -810,11 +758,15 @@ public class FloorProgressionManager : MonoBehaviour
         }
 
         if (missedThisFloor > 0)
-        {
             ResetCombo();
-        }
 
         UpdateFloorText();
+
+        if (CurrentFloor == 7 && playingEnding)
+        {
+            FinishGame();
+            yield break;
+        }
 
         string message;
 
@@ -828,11 +780,8 @@ public class FloorProgressionManager : MonoBehaviour
         }
         else
         {
-            // UPDATED:
-            // Only show the missed passenger count.
-
-            message = "MISSED: " +
-                      missedThisFloor + " NPCs";
+            message =
+                "MISSED: " + missedThisFloor + " NPCs";
         }
 
         string nextPhase =
@@ -867,29 +816,14 @@ public class FloorProgressionManager : MonoBehaviour
         string nextPhase,
         float seconds)
     {
-        // UPDATED:
-        // Use a simple banner for both
-        // successful and missed passengers.
-        //
-        // ALL PASSENGERS EXITED!
-        // MISSED: X NPCs
-        //
-        // Keep countdown.
-        // Hide NEXT: BOARDING.
-
         simpleSuccessBanner =
             message == "ALL PASSENGERS EXITED!" ||
             message.StartsWith("MISSED:");
 
         if (simpleSuccessBanner)
-        {
             phaseBannerText = message;
-        }
         else
-        {
-            phaseBannerText =
-                message + "\nNEXT: " + nextPhase;
-        }
+            phaseBannerText = message + "\nNEXT: " + nextPhase;
 
         float duration = Mathf.Max(0f, seconds);
 
@@ -905,9 +839,7 @@ public class FloorProgressionManager : MonoBehaviour
         }
 
         if (duration > 0f)
-        {
             yield return new WaitForSecondsRealtime(duration);
-        }
 
         phaseBannerActive = false;
         phaseBannerText = "";
@@ -975,6 +907,30 @@ public class FloorProgressionManager : MonoBehaviour
 
         yield return null;
 
+        // FLOOR 7 CINEMATIC
+
+        if (CurrentFloor == 7 && useFinalFloorEnding)
+        {
+            if (ending != null && ending.IsReady)
+            {
+                if (ending.ShowEndingCamera(cameraSwitcher))
+                {
+                    yield return PlayFinalFloorEnding(
+                        next,
+                        passengers
+                    );
+
+                    yield break;
+                }
+            }
+
+            Debug.LogWarning(
+                "Ending setup incomplete. " +
+                "Using normal Floor 7 unloading.",
+                this
+            );
+        }
+
         next.doorController.OpenDoors();
 
         yield return WaitForDoor(
@@ -988,6 +944,85 @@ public class FloorProgressionManager : MonoBehaviour
 
         StartUnloading();
         transitioning = false;
+    }
+
+    // =====================================
+    // PLAY FINAL FLOOR ENDING
+    // =====================================
+
+    private IEnumerator PlayFinalFloorEnding(
+        FloorSetup finalFloor,
+        List<NPCQueueAgent> passengers)
+    {
+        playingEnding = true;
+        transitioning = true;
+
+        phase = FloorPhase.Unloading;
+        phaseBannerActive = false;
+
+        countdown.StopCountdown();
+
+        grabController.enabled = false;
+        queueManager.enabled = false;
+
+        grabController.CanGrabPassenger = null;
+
+        foreach (NPCQueueAgent agent in passengers)
+        {
+            if (agent == null)
+                continue;
+
+            PassengerExitStatus status =
+                agent.GetComponent<PassengerExitStatus>();
+
+            if (status == null)
+            {
+                status = agent.gameObject
+                    .AddComponent<PassengerExitStatus>();
+            }
+
+            if (status.State ==
+                PassengerExitStatus.ExitState.Waiting)
+            {
+                status.RequestExit(CurrentFloor);
+            }
+
+            status.enabled = false;
+        }
+
+        unloadHasTargets = CountPendingExits() > 0;
+
+        if (countdown.countdownText != null)
+            countdown.countdownText.enabled = false;
+
+        // Direct cut to ending camera.
+        // No fade-in animation.
+
+        if (blackFade != null)
+        {
+            blackFade.alpha = 0f;
+            blackFade.blocksRaycasts = false;
+            blackFade.gameObject.SetActive(false);
+        }
+
+        SetFloorTextLoadingHidden(false);
+
+        yield return new WaitForSeconds(0.15f);
+
+        finalFloor.doorController.OpenDoors();
+
+        yield return WaitForDoor(
+            finalFloor.doorController,
+            true
+        );
+
+        yield return new WaitForSeconds(ending.DoorWait);
+
+        yield return ending.Play(passengers);
+
+        Physics.SyncTransforms();
+
+        yield return FinishUnloading();
     }
 
     // =====================================
@@ -1017,25 +1052,22 @@ public class FloorProgressionManager : MonoBehaviour
             }
 
             if (!lowering)
-            {
                 yield break;
-            }
 
             timeout -= Time.deltaTime;
+
             yield return null;
         }
     }
 
     // =====================================
-    // ORIGINAL ELEVATOR ZONE CHECK
+    // ELEVATOR ZONE CHECK
     // =====================================
 
     private bool IsInsideElevator(NPCQueueAgent agent)
     {
         if (agent == null || elevatorZone == null)
-        {
             return false;
-        }
 
         Vector3 sample = agent.transform.position;
 
@@ -1083,9 +1115,7 @@ public class FloorProgressionManager : MonoBehaviour
         }
 
         if (capsule != null && capsule.enabled)
-        {
             return capsule.bounds;
-        }
 
         return new Bounds(
             agent.transform.position + Vector3.up * 0.9f,
@@ -1100,9 +1130,7 @@ public class FloorProgressionManager : MonoBehaviour
     private bool IsFullyOutsideElevator(NPCQueueAgent agent)
     {
         if (agent == null || elevatorZone == null)
-        {
             return false;
-        }
 
         Bounds body = GetNPCBounds(agent);
         Bounds zone = elevatorZone.bounds;
@@ -1134,22 +1162,16 @@ public class FloorProgressionManager : MonoBehaviour
     private bool IsPendingPassengerNearDoor(NPCQueueAgent agent)
     {
         if (agent == null || elevatorZone == null)
-        {
             return false;
-        }
 
         PassengerExitStatus status =
             agent.GetComponent<PassengerExitStatus>();
 
         if (status == null || !status.IsPending)
-        {
             return false;
-        }
 
         if (IsFullyOutsideElevator(agent))
-        {
             return false;
-        }
 
         Bounds body = GetNPCBounds(agent);
         Bounds zone = elevatorZone.bounds;
@@ -1180,9 +1202,7 @@ public class FloorProgressionManager : MonoBehaviour
         foreach (NPCQueueAgent agent in agents)
         {
             if (agent == null)
-            {
                 continue;
-            }
 
             if (IsInsideElevator(agent) ||
                 IsPendingPassengerNearDoor(agent))
@@ -1203,29 +1223,24 @@ public class FloorProgressionManager : MonoBehaviour
         bool waitForOpen)
     {
         if (door == null)
-        {
             yield break;
-        }
 
         float timeout = 12f;
 
         while (timeout > 0f)
         {
             if (door == null)
-            {
                 yield break;
-            }
 
             bool complete = waitForOpen
                 ? door.IsFullyOpen
                 : door.IsFullyClosed;
 
             if (complete)
-            {
                 yield break;
-            }
 
             timeout -= Time.deltaTime;
+
             yield return null;
         }
 
@@ -1246,47 +1261,35 @@ public class FloorProgressionManager : MonoBehaviour
             new HashSet<Transform>();
 
         if (cameraSwitcher.cameraLobby != null)
-        {
             targets.Add(cameraSwitcher.cameraLobby.transform);
-        }
 
         if (cameraSwitcher.cameraElevator != null)
-        {
             targets.Add(cameraSwitcher.cameraElevator.transform);
-        }
 
         if (elevatorZone != null)
-        {
             targets.Add(elevatorZone.transform);
-        }
 
         if (elevatorMoveDirection != null)
-        {
             targets.Add(elevatorMoveDirection);
-        }
 
         if (extraMovingObjects != null)
         {
             foreach (Transform extra in extraMovingObjects)
             {
                 if (extra != null)
-                {
                     targets.Add(extra);
-                }
             }
         }
+
+        // Camera_Ending stays on Floor 7.
 
         foreach (Transform target in targets)
         {
             if (target == null)
-            {
                 continue;
-            }
 
             if (HasMovingAncestor(target, targets))
-            {
                 continue;
-            }
 
             target.position += movement;
         }
@@ -1294,16 +1297,12 @@ public class FloorProgressionManager : MonoBehaviour
         foreach (NPCQueueAgent agent in passengers)
         {
             if (agent == null)
-            {
                 continue;
-            }
 
             Transform npc = agent.transform;
 
             if (npc == null)
-            {
                 continue;
-            }
 
             if (!HasMovingAncestor(npc, targets) &&
                 !targets.Contains(npc))
@@ -1318,18 +1317,14 @@ public class FloorProgressionManager : MonoBehaviour
         HashSet<Transform> targets)
     {
         if (child == null)
-        {
             return false;
-        }
 
         Transform parent = child.parent;
 
         while (parent != null)
         {
             if (targets.Contains(parent))
-            {
                 return true;
-            }
 
             parent = parent.parent;
         }
@@ -1344,12 +1339,12 @@ public class FloorProgressionManager : MonoBehaviour
     private IEnumerator FadeTo(float targetAlpha)
     {
         if (blackFade == null)
-        {
             yield break;
-        }
 
         blackFade.gameObject.SetActive(true);
         blackFade.blocksRaycasts = true;
+
+        SetFloorTextLoadingHidden(true);
 
         float startAlpha = blackFade.alpha;
         float duration = Mathf.Max(0.01f, fadeDuration);
@@ -1374,28 +1369,89 @@ public class FloorProgressionManager : MonoBehaviour
         {
             blackFade.blocksRaycasts = false;
             blackFade.gameObject.SetActive(false);
+
+            SetFloorTextLoadingHidden(false);
         }
     }
 
     // =====================================
-    // FLOOR TEXT
+    // LOADING SCREEN CHECK
     // =====================================
+
+    private bool IsLoadingScreenActive()
+    {
+        return blackFade != null &&
+               blackFade.gameObject.activeInHierarchy;
+    }
+
+    private void SetFloorTextLoadingHidden(bool hidden)
+    {
+        if (currentFloorText == null)
+            return;
+
+        if (hidden)
+        {
+            if (!floorTextHiddenForLoading)
+            {
+                floorTextWasEnabled =
+                    currentFloorText.enabled;
+
+                floorTextHiddenForLoading = true;
+            }
+
+            currentFloorText.enabled = false;
+        }
+        else if (floorTextHiddenForLoading)
+        {
+            currentFloorText.enabled =
+                floorTextWasEnabled;
+
+            floorTextHiddenForLoading = false;
+        }
+    }
+
+    // =====================================
+    // UPDATED: PHASE STATUS TEXT
+    // =====================================
+
+    private string GetPhaseDisplayText()
+    {
+        if (transitioning)
+        {
+            return "MOVING / CHANGING PHASE";
+        }
+
+        if (phase == FloorPhase.Boarding)
+        {
+            return "BOARDING - LOAD NPCs";
+        }
+
+        if (!unloadHasTargets)
+        {
+            return "UNLOADING - NO ONE TO EXIT";
+        }
+
+        return "UNLOADING - TAKE NPCs OUT";
+    }
+
+    // =====================================
+    // UPDATED: FLOOR + PHASE + SCORE
+    // =====================================
+
+    private string GetHUDText()
+    {
+        return
+            "FLOOR " + CurrentFloor + " / 7\n" +
+            GetPhaseDisplayText() + "\n" +
+            "SCORE: " + score;
+    }
 
     private void UpdateFloorText()
     {
         if (currentFloorText == null)
-        {
             return;
-        }
 
-        string state = phase == FloorPhase.Unloading
-            ? "UNLOADING"
-            : "BOARDING";
-
-        currentFloorText.text =
-            "FLOOR " + CurrentFloor + " / 7\n" +
-            state + "\n" +
-            "SCORE " + score;
+        currentFloorText.text = GetHUDText();
     }
 
     // =====================================
@@ -1432,6 +1488,7 @@ public class FloorProgressionManager : MonoBehaviour
             scoreStyle.fontSize = 20;
             scoreStyle.fontStyle = FontStyle.Bold;
             scoreStyle.normal.textColor = Color.white;
+            scoreStyle.alignment = TextAnchor.MiddleCenter;
             scoreStyle.wordWrap = false;
         }
 
@@ -1453,9 +1510,7 @@ public class FloorProgressionManager : MonoBehaviour
     private void DrawScoreFeedback()
     {
         if (!showScoreFeedback)
-        {
             return;
-        }
 
         EnsureGUIStyles();
 
@@ -1472,7 +1527,6 @@ public class FloorProgressionManager : MonoBehaviour
         float x = Screen.width - width - 12f;
 
         // Keep COMBO below TIME.
-        // Position remains at 125f.
 
         if (comboCount > 0)
         {
@@ -1509,7 +1563,8 @@ public class FloorProgressionManager : MonoBehaviour
         {
             ScorePopup popup = scorePopups[i];
 
-            float age = Time.unscaledTime - popup.createdAt;
+            float age =
+                Time.unscaledTime - popup.createdAt;
 
             float progress = Mathf.Clamp01(
                 age / Mathf.Max(0.5f, feedbackDuration)
@@ -1561,15 +1616,22 @@ public class FloorProgressionManager : MonoBehaviour
     }
 
     // =====================================
-    // TEMPORARY PHASE HUD
+    // UPDATED: FLOOR + PHASE + SCORE HUD
     // =====================================
 
     private void OnGUI()
     {
-        if (finished || countdown == null)
+        if (finished ||
+            playingEnding ||
+            countdown == null)
         {
             return;
         }
+
+        // Hide all OnGUI elements during loading.
+
+        if (IsLoadingScreenActive())
+            return;
 
         EnsureGUIStyles();
 
@@ -1585,105 +1647,57 @@ public class FloorProgressionManager : MonoBehaviour
                     )
                 );
 
-                // Simple banner:
-                // ALL PASSENGERS EXITED! + countdown
-                // MISSED: X NPCs + countdown
+                float width = 520f;
 
-                if (simpleSuccessBanner)
-                {
-                    float width = 520f;
-                    float height = 120f;
+                float height =
+                    simpleSuccessBanner ? 120f : 180f;
 
-                    Rect panel = new Rect(
-                        (Screen.width - width) * 0.5f,
-                        (Screen.height - height) * 0.35f,
-                        width,
-                        height
-                    );
-
-                    GUI.Box(
-                        panel,
-                        GUIContent.none
-                    );
-
-                    GUI.Label(
-                        panel,
-                        phaseBannerText + "\n\n" +
-                        secondsLeft + "s",
-                        bannerStyle
-                    );
-                }
-                else
-                {
-                    // Preserve all other phase banners.
-
-                    float width = 520f;
-                    float height = 180f;
-
-                    Rect panel = new Rect(
-                        (Screen.width - width) * 0.5f,
-                        (Screen.height - height) * 0.35f,
-                        width,
-                        height
-                    );
-
-                    GUI.Box(
-                        panel,
-                        GUIContent.none
-                    );
-
-                    GUI.Label(
-                        panel,
-                        phaseBannerText + "\n\n" +
-                        secondsLeft + "s",
-                        bannerStyle
-                    );
-                }
-            }
-            else
-            {
-                string phaseName;
-
-                if (transitioning)
-                {
-                    phaseName = "MOVING / CHANGING PHASE";
-                }
-                else if (phase == FloorPhase.Boarding)
-                {
-                    phaseName = "BOARDING - LOAD NPCs";
-                }
-                else if (!unloadHasTargets)
-                {
-                    phaseName = "UNLOADING - NO ONE TO EXIT";
-                }
-                else
-                {
-                    phaseName = "UNLOADING - TAKE NPCs OUT";
-                }
-
-                string timeText = transitioning
-                    ? "--"
-                    : Mathf.CeilToInt(
-                        countdown.RemainingTime
-                    ).ToString();
-
-                string text =
-                    "FLOOR " + CurrentFloor + " / 7\n" +
-                    phaseName + "\n" +
-                    "TIME: " + timeText + "s" +
-                    "    EXIT LEFT: " +
-                    (phase == FloorPhase.Unloading
-                        ? CountPendingExits()
-                        : 0) +
-                    "\nSCORE: " + score;
+                Rect panel = new Rect(
+                    (Screen.width - width) * 0.5f,
+                    (Screen.height - height) * 0.35f,
+                    width,
+                    height
+                );
 
                 GUI.Box(
-                    new Rect(15, 15, 455, 145),
+                    panel,
                     GUIContent.none
                 );
 
                 GUI.Label(
-                    new Rect(28, 22, 430, 135),
+                    panel,
+                    phaseBannerText + "\n\n" +
+                    secondsLeft + "s",
+                    bannerStyle
+                );
+            }
+            else
+            {
+                // FLOOR
+                // BOARDING / UNLOADING / MOVING
+                // SCORE
+                //
+                // No TIME or EXIT LEFT.
+
+                string text = GetHUDText();
+
+                GUI.Box(
+                    new Rect(
+                        15f,
+                        15f,
+                        455f,
+                        105f
+                    ),
+                    GUIContent.none
+                );
+
+                GUI.Label(
+                    new Rect(
+                        28f,
+                        22f,
+                        430f,
+                        91f
+                    ),
                     text,
                     phaseStyle
                 );
@@ -1702,6 +1716,7 @@ public class FloorProgressionManager : MonoBehaviour
         finished = true;
         transitioning = false;
         phaseBannerActive = false;
+        playingEnding = false;
 
         countdown.StopCountdown();
 
@@ -1722,9 +1737,7 @@ public class FloorProgressionManager : MonoBehaviour
         }
 
         if (finishPanel != null)
-        {
             finishPanel.SetActive(true);
-        }
 
         Debug.Log(
             "Game Complete | Score: " +
