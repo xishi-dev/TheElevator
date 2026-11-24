@@ -3045,7 +3045,7 @@ Transform:
   m_GameObject: {fileID: 11774524}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 7.98, y: -0.28, z: 6.217}
+  m_LocalPosition: {x: 7.98, y: 0.078, z: 6.217}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5878,7 +5878,7 @@ Transform:
   m_GameObject: {fileID: 27701760}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.024, y: -0.2800007, z: 6.217}
+  m_LocalPosition: {x: 2.024, y: 0.078, z: 6.217}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -443896,31 +443896,31 @@ MonoBehaviour:
     doorController: {fileID: 14587096}
     spawnPoint: {fileID: 1864729617}
     queueStart: {fileID: 55384069}
-    roundSeconds: 30
+    roundSeconds: 15
   - floorName: Floor_02
     stopPoint: {fileID: 919265977}
     doorController: {fileID: 1453128125}
     spawnPoint: {fileID: 103448503}
     queueStart: {fileID: 581495557}
-    roundSeconds: 25
+    roundSeconds: 15
   - floorName: Floor_03
     stopPoint: {fileID: 2090355478}
     doorController: {fileID: 36836346}
     spawnPoint: {fileID: 4485846}
     queueStart: {fileID: 490457349}
-    roundSeconds: 20
+    roundSeconds: 15
   - floorName: Floor_04
     stopPoint: {fileID: 1902063349}
     doorController: {fileID: 339224938}
     spawnPoint: {fileID: 691624082}
     queueStart: {fileID: 516705092}
-    roundSeconds: 15
+    roundSeconds: 10
   - floorName: Floor_05
     stopPoint: {fileID: 1268286540}
     doorController: {fileID: 109187845}
     spawnPoint: {fileID: 11774525}
     queueStart: {fileID: 27701761}
-    roundSeconds: 13
+    roundSeconds: 10
   - floorName: Floor_06
     stopPoint: {fileID: 191380993}
     doorController: {fileID: 100724350}
@@ -443932,7 +443932,7 @@ MonoBehaviour:
     doorController: {fileID: 1179749258}
     spawnPoint: {fileID: 544484357}
     queueStart: {fileID: 320086530}
-    roundSeconds: 8
+    roundSeconds: 10
   countdown: {fileID: 359602532}
   cameraSwitcher: {fileID: 1821910198}
   grabController: {fileID: 538871562}
@@ -443943,9 +443943,9 @@ MonoBehaviour:
   travelDuration: 5
   fadeDuration: 0.4
   blackFade: {fileID: 640195640}
-  unloadSeconds: 15
+  unloadSeconds: 25
   noExitSeconds: 3
-  exitChance: 0.3
+  exitChance: 0.2
   phaseTransitionDelay: 3
   boardingPoints: 100
   unloadingPoints: 125
