@@ -129034,10 +129034,14 @@ MonoBehaviour:
   dragSpeed: 12
   lowerSpeed: 2.5
   maxRayDistance: 100
+  mouseSensitivity: 1
+  maxMouseDeltaPixels: 150
+  minLobbyCameraDistance: 1.2
   scrollMovePerStep: 0.35
   maxScrollDistance: 3
   invertScrollDirection: 0
   collisionSkin: 0.03
+  switchCameraOnRelease: 1
 --- !u!1 &538875651
 GameObject:
   m_ObjectHideFlags: 0
@@ -284998,13 +285002,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1224222834}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.0041876496, y: -0.00090280216, z: -0.0000027853478, w: -0.9999908}
-  m_LocalPosition: {x: -0.05073797, y: 1.7228659, z: 1.2370436}
+  m_LocalRotation: {x: -0.1473826, y: -0.200728, z: 0.041752394, w: -0.9675967}
+  m_LocalPosition: {x: -1.545, y: 2.782, z: 1.791}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2091825102}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 17.576, y: 23.239, z: -1.3}
 --- !u!1 &1224814113
 GameObject:
   m_ObjectHideFlags: 0
@@ -413006,14 +413010,14 @@ RectTransform:
   m_GameObject: {fileID: 1772089885}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.3446, y: 1.3446, z: 1.3446}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1951691192}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 144, y: 326}
+  m_AnchoredPosition: {x: 968, y: 453}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1772089887
@@ -413036,7 +413040,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 30
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -413045,8 +413049,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190335
-  m_fontColor: {r: 1, g: 0, b: 0, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -413534,14 +413538,14 @@ RectTransform:
   m_GameObject: {fileID: 1773534176}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.3446, y: 1.3446, z: 1.3446}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1951691192}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 32, y: 327}
+  m_AnchoredPosition: {x: 817.40094, y: 454.34006}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1773534178
@@ -413564,7 +413568,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'TIME
+  m_text: 'TIME :
 
 '
   m_isRightToLeft: 0
@@ -413575,8 +413579,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -443939,9 +443943,23 @@ MonoBehaviour:
   travelDuration: 5
   fadeDuration: 0.4
   blackFade: {fileID: 640195640}
+  unloadSeconds: 15
+  noExitSeconds: 3
+  exitChance: 0.3
+  phaseTransitionDelay: 3
+  boardingPoints: 100
+  unloadingPoints: 125
+  firstMissPenalty: 200
+  secondMissPenalty: 350
+  additionalMissIncrease: 100
+  comboBonusStep: 25
+  maxComboBonus: 100
+  showScoreFeedback: 1
+  feedbackDuration: 2
   currentFloorText: {fileID: 0}
   finishPanel: {fileID: 0}
   finishText: {fileID: 0}
+  showPhaseOverlay: 1
 --- !u!1 &1895772919
 GameObject:
   m_ObjectHideFlags: 0
@@ -492735,7 +492753,7 @@ MonoBehaviour:
   - {fileID: 7700414911696037215, guid: 068f8f49fbaf89242ad7de73872b3bdb, type: 3}
   - {fileID: 2269803148078274915, guid: 3f0dc1c5d065c8c439917b6faae3c6d3, type: 3}
   spawnPoint: {fileID: 1864729617}
-  spawnInterval: 2
+  spawnInterval: 1
   maxNPCs: 6
   maxSpawnedNPCs: 24
   queueStart: {fileID: 55384069}
