@@ -93,6 +93,7 @@ public class FloorProgressionManager : MonoBehaviour
     [SerializeField] private TMP_Text currentFloorText;
     [SerializeField] private GameObject finishPanel;
     [SerializeField] private TMP_Text finishText;
+    [SerializeField] private GameResultUI gameResultUI;
 
     [Header("Temporary Phase HUD")]
     [SerializeField] private bool showPhaseOverlay = true;
@@ -1736,8 +1737,30 @@ public class FloorProgressionManager : MonoBehaviour
                 "MAX COMBO: x" + maxCombo;
         }
 
-        if (finishPanel != null)
+        // Show the custom Result UI created in the Canvas.
+        // Keep the old finish panel as a fallback if no Result UI is assigned.
+        if (gameResultUI != null)
+        {
+            if (finishPanel != null)
+                finishPanel.SetActive(false);
+
+            gameResultUI.ShowResult(score);
+        }
+        else if (finishPanel != null)
+        {
             finishPanel.SetActive(true);
+            Debug.LogWarning(
+                "GameResultUI is not assigned. Showing the legacy finish panel instead.",
+                this
+            );
+        }
+        else
+        {
+            Debug.LogError(
+                "No GameResultUI or legacy finishPanel is assigned.",
+                this
+            );
+        }
 
         Debug.Log(
             "Game Complete | Score: " +
