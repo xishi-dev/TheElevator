@@ -1,6 +1,5 @@
-
+﻿
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class ElevatorDoorController : MonoBehaviour
 {
@@ -12,7 +11,13 @@ public class ElevatorDoorController : MonoBehaviour
     [SerializeField] private float openDistance = 1.4f;
     [SerializeField] private float moveSpeed = 1.5f;
     [SerializeField] private bool openOnStart = true;
-    [SerializeField] private bool allowManualInput = true;
+
+    [Header("Door Audio")]
+    [SerializeField] private AudioSource doorAudioSource;
+    [SerializeField] private AudioClip openDoorSound;
+    [SerializeField] private AudioClip closeDoorSound;
+    [Range(0f, 1f)]
+    [SerializeField] private float audioVolume = 1f;
 
     private Vector3 leftClosedPos;
     private Vector3 rightClosedPos;
@@ -26,25 +31,19 @@ public class ElevatorDoorController : MonoBehaviour
 
     public bool IsFullyClosed =>
         initialized &&
-        Vector3.Distance(leftDoor.localPosition, leftClosedPos)
-            < 0.005f &&
-        Vector3.Distance(rightDoor.localPosition, rightClosedPos)
-            < 0.005f;
+        Vector3.Distance(leftDoor.localPosition, leftClosedPos) < 0.005f &&
+        Vector3.Distance(rightDoor.localPosition, rightClosedPos) < 0.005f;
 
     public bool IsFullyOpen =>
         initialized &&
-        Vector3.Distance(leftDoor.localPosition, leftOpenPos)
-            < 0.005f &&
-        Vector3.Distance(rightDoor.localPosition, rightOpenPos)
-            < 0.005f;
+        Vector3.Distance(leftDoor.localPosition, leftOpenPos) < 0.005f &&
+        Vector3.Distance(rightDoor.localPosition, rightOpenPos) < 0.005f;
 
     private void Awake()
     {
         if (leftDoor == null || rightDoor == null)
         {
-            Debug.LogError(
-                "Assign both elevator doors!", this
-            );
+            Debug.LogError("Assign both elevator doors!", this);
             enabled = false;
             return;
         }
@@ -52,11 +51,8 @@ public class ElevatorDoorController : MonoBehaviour
         leftClosedPos = leftDoor.localPosition;
         rightClosedPos = rightDoor.localPosition;
 
-        leftOpenPos =
-            leftClosedPos + Vector3.left * openDistance;
-
-        rightOpenPos =
-            rightClosedPos + Vector3.right * openDistance;
+        leftOpenPos = leftClosedPos + Vector3.left * openDistance;
+        rightOpenPos = rightClosedPos + Vector3.right * openDistance;
 
         initialized = true;
         isOpen = openOnStart;
@@ -68,57 +64,50 @@ public class ElevatorDoorController : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        if (openOnStart)
+            PlayDoorSound(openDoorSound);
+    }
+
     private void Update()
     {
-        if (!initialized)
-            return;
+        if (!initialized) return;
 
-        if (allowManualInput &&
-            Keyboard.current != null &&
-            Keyboard.current.eKey.wasPressedThisFrame)
-        {
-            if (isOpen)
-                CloseDoors();
-            else
-                OpenDoors();
-        }
+        Vector3 leftTarget = isOpen ? leftOpenPos : leftClosedPos;
+        Vector3 rightTarget = isOpen ? rightOpenPos : rightClosedPos;
 
-        Vector3 leftTarget =
-            isOpen ? leftOpenPos : leftClosedPos;
-
-        Vector3 rightTarget =
-            isOpen ? rightOpenPos : rightClosedPos;
-
-        float step = Mathf.Max(0.01f, moveSpeed)
-                     * Time.deltaTime;
+        float step = moveSpeed * Time.deltaTime;
 
         leftDoor.localPosition = Vector3.MoveTowards(
-            leftDoor.localPosition,
-            leftTarget,
-            step
-        );
+            leftDoor.localPosition, leftTarget, step);
 
         rightDoor.localPosition = Vector3.MoveTowards(
-            rightDoor.localPosition,
-            rightTarget,
-            step
-        );
+            rightDoor.localPosition, rightTarget, step);
     }
 
+    // เรียกใช้เมื่อถึงเวลาต้องเปิดประตู
     public void OpenDoors()
     {
-        if (initialized)
-            isOpen = true;
+        if (!initialized || isOpen) return;
+
+        isOpen = true;
+        PlayDoorSound(openDoorSound);
     }
 
+    // เรียกใช้เมื่อถึงเวลาต้องปิดประตู
     public void CloseDoors()
     {
-        if (initialized)
-            isOpen = false;
+        if (!initialized || !isOpen) return;
+
+        isOpen = false;
+        PlayDoorSound(closeDoorSound);
     }
 
-    public void SetManualInputEnabled(bool allowed)
+    private void PlayDoorSound(AudioClip clip)
     {
-        allowManualInput = allowed;
+        if (doorAudioSource == null || clip == null) return;
+
+        doorAudioSource.PlayOneShot(clip, audioVolume);
     }
 }
