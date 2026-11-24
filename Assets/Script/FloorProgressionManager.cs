@@ -73,6 +73,19 @@ public class FloorProgressionManager : MonoBehaviour
     [Min(0)]
     [SerializeField] private int additionalMissIncrease = 100;
 
+    [Header("NEW - Combo Settings")]
+    [Min(0)]
+    [SerializeField] private int comboBonusStep = 25;
+
+    [Min(0)]
+    [SerializeField] private int maxComboBonus = 100;
+
+    [Header("NEW - Score Feedback")]
+    [SerializeField] private bool showScoreFeedback = true;
+
+    [Min(0.5f)]
+    [SerializeField] private float feedbackDuration = 2f;
+
     [Header("UI")]
     [SerializeField] private TMP_Text currentFloorText;
     [SerializeField] private GameObject finishPanel;
@@ -87,6 +100,10 @@ public class FloorProgressionManager : MonoBehaviour
     private int deliveredCount;
     private int missedCount;
 
+    // NEW: Combo
+    private int comboCount;
+    private int maxCombo;
+
     private bool transitioning;
     private bool finished;
     private bool unloadHasTargets;
@@ -99,6 +116,19 @@ public class FloorProgressionManager : MonoBehaviour
 
     private GUIStyle phaseStyle;
     private GUIStyle bannerStyle;
+    private GUIStyle scoreStyle;
+    private GUIStyle comboStyle;
+
+    // NEW: Score popups
+    private class ScorePopup
+    {
+        public string message;
+        public Color color;
+        public float createdAt;
+    }
+
+    private readonly List<ScorePopup> scorePopups =
+        new List<ScorePopup>();
 
     public int CurrentFloor => floorIndex + 1;
     public FloorPhase CurrentPhase => phase;
@@ -107,6 +137,9 @@ public class FloorProgressionManager : MonoBehaviour
     public int BoardedCount => boardedCount;
     public int DeliveredCount => deliveredCount;
     public int MissedCount => missedCount;
+
+    public int ComboCount => comboCount;
+    public int MaxCombo => maxCombo;
 
     // =====================================
     // EVENTS
@@ -150,6 +183,10 @@ public class FloorProgressionManager : MonoBehaviour
         boardedCount = 0;
         deliveredCount = 0;
         missedCount = 0;
+
+        comboCount = 0;
+        maxCombo = 0;
+        scorePopups.Clear();
 
         finished = false;
         transitioning = true;
@@ -197,6 +234,7 @@ public class FloorProgressionManager : MonoBehaviour
         );
 
         cameraSwitcher.ShowLobby();
+
         first.doorController.OpenDoors();
 
         yield return WaitForDoor(
@@ -263,11 +301,13 @@ public class FloorProgressionManager : MonoBehaviour
     }
 
     // =====================================
-    // UPDATE GAME
+    // UPDATE
     // =====================================
 
     private void Update()
     {
+        UpdateScorePopups();
+
         if (finished || transitioning)
         {
             return;
@@ -281,6 +321,97 @@ public class FloorProgressionManager : MonoBehaviour
         {
             StartCoroutine(FinishUnloading());
         }
+    }
+
+    // =====================================
+    // NEW: SCORE FEEDBACK POPUPS
+    // =====================================
+
+    private void AddScoreFeedback(
+        string message,
+        Color color)
+    {
+        if (!showScoreFeedback)
+        {
+            return;
+        }
+
+        scorePopups.Add(new ScorePopup
+        {
+            message = message,
+            color = color,
+            createdAt = Time.unscaledTime
+        });
+
+        // Prevent a huge popup list.
+        while (scorePopups.Count > 5)
+        {
+            scorePopups.RemoveAt(0);
+        }
+    }
+
+    private void UpdateScorePopups()
+    {
+        float duration =
+            Mathf.Max(0.5f, feedbackDuration);
+
+        for (int i = scorePopups.Count - 1;
+             i >= 0;
+             i--)
+        {
+            float age =
+                Time.unscaledTime -
+                scorePopups[i].createdAt;
+
+            if (age >= duration)
+            {
+                scorePopups.RemoveAt(i);
+            }
+        }
+    }
+
+    // =====================================
+    // NEW: COMBO SYSTEM
+    // =====================================
+
+    private int RegisterSuccessfulExit()
+    {
+        comboCount++;
+
+        if (comboCount > maxCombo)
+        {
+            maxCombo = comboCount;
+        }
+
+        // 1st success: +0 bonus
+        // 2nd success: +25 bonus
+        // 3rd success: +50 bonus
+        // 4th success: +75 bonus
+        // 5th+ success: +100 bonus
+        int bonus = (comboCount - 1) *
+                    Mathf.Max(0, comboBonusStep);
+
+        return Mathf.Min(
+            bonus,
+            Mathf.Max(0, maxComboBonus)
+        );
+    }
+
+    private void ResetCombo()
+    {
+        if (comboCount > 0)
+        {
+            Debug.Log(
+                "[COMBO] Lost combo x" + comboCount
+            );
+
+            AddScoreFeedback(
+                "COMBO LOST!",
+                new Color(1f, 0.35f, 0.2f)
+            );
+        }
+
+        comboCount = 0;
     }
 
     // =====================================
@@ -317,7 +448,10 @@ public class FloorProgressionManager : MonoBehaviour
                 continue;
             }
 
+            // =================================
             // BOARDING SCORE
+            // =================================
+
             if (phase == FloorPhase.Boarding)
             {
                 if (inside &&
@@ -330,6 +464,12 @@ public class FloorProgressionManager : MonoBehaviour
                     boardedCount++;
                     score += boardingPoints;
 
+                    AddScoreFeedback(
+                        "+" + boardingPoints +
+                        " BOARDING",
+                        new Color(0.45f, 1f, 0.55f)
+                    );
+
                     Debug.Log(
                         "[BOARDING] +" +
                         boardingPoints +
@@ -338,7 +478,10 @@ public class FloorProgressionManager : MonoBehaviour
                 }
             }
 
-            // DELIVERY SCORE
+            // =================================
+            // DELIVERY SCORE + COMBO
+            // =================================
+
             if (phase == FloorPhase.Unloading)
             {
                 if (status.IsPending &&
@@ -350,19 +493,46 @@ public class FloorProgressionManager : MonoBehaviour
                     status.MarkDelivered();
 
                     deliveredCount++;
-                    score += unloadingPoints;
+
+                    // NEW:
+                    // Successful exits build Combo.
+                    int comboBonus =
+                        RegisterSuccessfulExit();
+
+                    int earnedPoints =
+                        unloadingPoints + comboBonus;
+
+                    score += earnedPoints;
+
+                    string popupText =
+                        "+" + earnedPoints +
+                        " EXIT";
+
+                    if (comboCount >= 2)
+                    {
+                        popupText +=
+                            "  COMBO x" + comboCount;
+                    }
+
+                    AddScoreFeedback(
+                        popupText,
+                        new Color(0.3f, 1f, 0.4f)
+                    );
 
                     Debug.Log(
-                        "[DELIVERED] +" +
-                        unloadingPoints +
-                        " : " + agent.name
+                        "[DELIVERED] " +
+                        agent.name +
+                        " | Base +" + unloadingPoints +
+                        " | Combo +" + comboBonus +
+                        " | Total +" + earnedPoints +
+                        " | Combo x" + comboCount
                     );
                 }
             }
 
-            // No penalty every second.
-            // Penalty happens only when
-            // the UNLOADING phase ends.
+            // No per-second LATE penalty.
+            // Penalties are applied once
+            // per NPC at phase end.
         }
 
         UpdateFloorText();
@@ -383,8 +553,7 @@ public class FloorProgressionManager : MonoBehaviour
 
         foreach (PassengerExitStatus status in statuses)
         {
-            if (status != null &&
-                status.IsPending)
+            if (status != null && status.IsPending)
             {
                 count++;
             }
@@ -394,7 +563,7 @@ public class FloorProgressionManager : MonoBehaviour
     }
 
     // =====================================
-    // NEW PENALTY FORMULA
+    // LATE PENALTY - PER NPC
     // =====================================
 
     private int GetMissCount(
@@ -405,18 +574,10 @@ public class FloorProgressionManager : MonoBehaviour
             return 1;
         }
 
-        // Each subsequent floor's
-        // UNLOADING counts as one more miss.
-        //
-        // Requested Floor 2:
-        // Floor 2 = first miss
-        // Floor 3 = second miss
-        // Floor 4 = third miss
-        // etc.
-
         return Mathf.Max(
             1,
-            CurrentFloor - status.RequestedFloor + 1
+            CurrentFloor -
+            status.RequestedFloor + 1
         );
     }
 
@@ -425,22 +586,15 @@ public class FloorProgressionManager : MonoBehaviour
     {
         int missCount = GetMissCount(status);
 
-        // First miss = -200
         if (missCount == 1)
         {
             return firstMissPenalty;
         }
 
-        // Second miss = -350
         if (missCount == 2)
         {
             return secondMissPenalty;
         }
-
-        // Third miss = -450
-        // Fourth miss = -550
-        // Fifth miss = -650
-        // etc.
 
         return secondMissPenalty +
                (missCount - 2) *
@@ -456,11 +610,9 @@ public class FloorProgressionManager : MonoBehaviour
         phase = FloorPhase.Boarding;
         unloadHasTargets = false;
 
-        // Normal NPCs can be grabbed.
-        // LATE NPCs are locked during
-        // BOARDING and must wait until
-        // the next UNLOADING phase.
-
+        // Normal passengers can be grabbed.
+        // LATE passengers are locked during
+        // BOARDING only.
         grabController.CanGrabPassenger = agent =>
         {
             if (agent == null)
@@ -476,12 +628,7 @@ public class FloorProgressionManager : MonoBehaviour
                 return true;
             }
 
-            if (status.IsOverdue)
-            {
-                return false;
-            }
-
-            return true;
+            return !status.IsOverdue;
         };
 
         queueManager.enabled = true;
@@ -531,7 +678,8 @@ public class FloorProgressionManager : MonoBehaviour
                     .AddComponent<PassengerExitStatus>();
             }
 
-            // Keep EXIT / LATE passengers.
+            // Existing EXIT / LATE passengers
+            // remain pending.
             if (status.IsPending)
             {
                 continue;
@@ -543,8 +691,6 @@ public class FloorProgressionManager : MonoBehaviour
                 continue;
             }
 
-            // Floor 2-6: 30% chance.
-            // Floor 7: everyone exits.
             bool mustExit =
                 CurrentFloor == 7 ||
                 Random.value < exitChance;
@@ -556,8 +702,7 @@ public class FloorProgressionManager : MonoBehaviour
         }
 
         // Only EXIT and LATE passengers
-        // can be grabbed in UNLOADING.
-
+        // may be grabbed in UNLOADING.
         grabController.CanGrabPassenger = agent =>
         {
             if (agent == null)
@@ -572,7 +717,8 @@ public class FloorProgressionManager : MonoBehaviour
                    status.IsPending;
         };
 
-        unloadHasTargets = CountPendingExits() > 0;
+        unloadHasTargets =
+            CountPendingExits() > 0;
 
         grabController.enabled = true;
 
@@ -587,13 +733,12 @@ public class FloorProgressionManager : MonoBehaviour
         Debug.Log(
             "[FLOOR " + CurrentFloor +
             "] UNLOADING started | " +
-            CountPendingExits() +
-            " passengers must exit"
+            CountPendingExits() + " to exit"
         );
     }
 
     // =====================================
-    // COUNTDOWN FINISHED
+    // TIMER
     // =====================================
 
     private void OnTimeUp()
@@ -628,7 +773,7 @@ public class FloorProgressionManager : MonoBehaviour
 
         yield return WaitForPassengersToSettle();
 
-        // Last check for completed deliveries.
+        // Count last successful deliveries.
         UpdatePassengerStates();
 
         bool allExited =
@@ -642,10 +787,8 @@ public class FloorProgressionManager : MonoBehaviour
                 FindObjectsSortMode.None
             );
 
-        // =================================
-        // APPLY PENALTY PER NPC
-        // =================================
-
+        // Apply penalties separately
+        // to every missed NPC.
         foreach (PassengerExitStatus status in statuses)
         {
             if (status == null ||
@@ -662,41 +805,44 @@ public class FloorProgressionManager : MonoBehaviour
                 continue;
             }
 
-            // Calculate penalty separately
-            // for THIS specific passenger.
             int missNumber =
                 GetMissCount(status);
 
             int penalty =
                 CalculateMissPenalty(status);
 
-            // IMPORTANT:
-            // Deduct directly for each NPC.
-            // Do not accumulate a total
-            // penalty and subtract once.
+            // Individual deduction.
             score -= penalty;
 
             missedCount++;
             missedThisFloor++;
 
-            // EXIT -> LATE
-            // LATE remains LATE
             status.MarkOverdue();
 
-            UpdateFloorText();
+            // NEW: show each NPC penalty.
+            AddScoreFeedback(
+                "-" + penalty +
+                " LATE (MISS " +
+                missNumber + ")",
+                new Color(1f, 0.3f, 0.3f)
+            );
 
             Debug.Log(
-                "[LATE NPC] " +
-                agent.name +
+                "[LATE NPC] " + agent.name +
                 " | Miss #" + missNumber +
                 " | -" + penalty +
                 " | Score: " + score
             );
         }
 
-        // =================================
-        // TRANSITION MESSAGE
-        // =================================
+        // NEW:
+        // Any missed exit breaks the Combo.
+        if (missedThisFloor > 0)
+        {
+            ResetCombo();
+        }
+
+        UpdateFloorText();
 
         string message;
 
@@ -753,13 +899,10 @@ public class FloorProgressionManager : MonoBehaviour
         float seconds)
     {
         phaseBannerText =
-            message + "\n" +
-            "NEXT: " + nextPhase;
+            message + "\nNEXT: " + nextPhase;
 
-        float duration = Mathf.Max(
-            0f,
-            seconds
-        );
+        float duration =
+            Mathf.Max(0f, seconds);
 
         phaseBannerEndTime =
             Time.realtimeSinceStartup +
@@ -840,8 +983,8 @@ public class FloorProgressionManager : MonoBehaviour
             passengers
         );
 
-        // Keep passengers inside,
-        // including all LATE NPCs.
+        // Preserve every NPC inside,
+        // including LATE passengers.
         queueManager.ConfigureForFloor(
             next.spawnPoint,
             next.queueStart,
@@ -975,7 +1118,7 @@ public class FloorProgressionManager : MonoBehaviour
     }
 
     // =====================================
-    // WAIT FOR DOOR
+    // WAIT FOR ELEVATOR DOOR
     // =====================================
 
     private IEnumerator WaitForDoor(
@@ -1143,11 +1286,8 @@ public class FloorProgressionManager : MonoBehaviour
         blackFade.blocksRaycasts = true;
 
         float startAlpha = blackFade.alpha;
-
-        float duration = Mathf.Max(
-            0.01f,
-            fadeDuration
-        );
+        float duration =
+            Mathf.Max(0.01f, fadeDuration);
 
         float elapsed = 0f;
 
@@ -1158,9 +1298,7 @@ public class FloorProgressionManager : MonoBehaviour
             blackFade.alpha = Mathf.Lerp(
                 startAlpha,
                 targetAlpha,
-                Mathf.Clamp01(
-                    elapsed / duration
-                )
+                Mathf.Clamp01(elapsed / duration)
             );
 
             yield return null;
@@ -1198,18 +1336,11 @@ public class FloorProgressionManager : MonoBehaviour
     }
 
     // =====================================
-    // TEMPORARY PHASE HUD
+    // GUI SETUP
     // =====================================
 
-    private void OnGUI()
+    private void EnsureGUIStyles()
     {
-        if (!showPhaseOverlay ||
-            finished ||
-            countdown == null)
-        {
-            return;
-        }
-
         if (phaseStyle == null)
         {
             phaseStyle =
@@ -1217,8 +1348,7 @@ public class FloorProgressionManager : MonoBehaviour
 
             phaseStyle.fontSize = 22;
             phaseStyle.fontStyle = FontStyle.Bold;
-            phaseStyle.normal.textColor =
-                Color.white;
+            phaseStyle.normal.textColor = Color.white;
             phaseStyle.wordWrap = true;
         }
 
@@ -1229,100 +1359,259 @@ public class FloorProgressionManager : MonoBehaviour
 
             bannerStyle.fontSize = 26;
             bannerStyle.fontStyle = FontStyle.Bold;
-            bannerStyle.normal.textColor =
-                Color.white;
-
+            bannerStyle.normal.textColor = Color.white;
             bannerStyle.alignment =
                 TextAnchor.MiddleCenter;
-
             bannerStyle.wordWrap = true;
         }
 
-        if (phaseBannerActive)
+        if (scoreStyle == null)
         {
-            int secondsLeft = Mathf.Max(
-                0,
-                Mathf.CeilToInt(
-                    phaseBannerEndTime -
-                    Time.realtimeSinceStartup
-                )
-            );
+            scoreStyle =
+                new GUIStyle(GUI.skin.label);
 
-            float width = 520f;
-            float height = 180f;
+            scoreStyle.fontSize = 20;
+            scoreStyle.fontStyle = FontStyle.Bold;
+            scoreStyle.normal.textColor = Color.white;
+            scoreStyle.alignment =
+                TextAnchor.MiddleCenter;
+            scoreStyle.wordWrap = false;
+        }
 
-            Rect panel = new Rect(
-                (Screen.width - width) * 0.5f,
-                (Screen.height - height) * 0.35f,
-                width,
-                height
-            );
+        if (comboStyle == null)
+        {
+            comboStyle =
+                new GUIStyle(GUI.skin.label);
 
-            GUI.Box(
-                panel,
-                GUIContent.none
-            );
+            comboStyle.fontSize = 21;
+            comboStyle.fontStyle = FontStyle.Bold;
+            comboStyle.normal.textColor = Color.white;
+            comboStyle.alignment =
+                TextAnchor.MiddleCenter;
+        }
+    }
 
-            GUI.Label(
-                panel,
-                phaseBannerText +
-                "\n\n" +
-                secondsLeft + "s",
-                bannerStyle
-            );
+    // =====================================
+    // NEW: DRAW SCORE FEEDBACK
+    // =====================================
 
+    private void DrawScoreFeedback()
+    {
+        if (!showScoreFeedback)
+        {
             return;
         }
 
-        string phaseName;
+        EnsureGUIStyles();
 
-        if (transitioning)
-        {
-            phaseName =
-                "MOVING / CHANGING PHASE";
-        }
-        else if (phase == FloorPhase.Boarding)
-        {
-            phaseName =
-                "BOARDING - LOAD NPCs";
-        }
-        else if (!unloadHasTargets)
-        {
-            phaseName =
-                "UNLOADING - NO ONE TO EXIT";
-        }
-        else
-        {
-            phaseName =
-                "UNLOADING - TAKE NPCs OUT";
-        }
+        Color previousColor = GUI.color;
+        int previousDepth = GUI.depth;
 
-        string timeText = transitioning
-            ? "--"
-            : Mathf.CeilToInt(
-                countdown.RemainingTime
-            ).ToString();
+        GUI.depth = -80;
 
-        string text =
-            "FLOOR " + CurrentFloor + " / 7\n" +
-            phaseName + "\n" +
-            "TIME: " + timeText + "s" +
-            "    EXIT LEFT: " +
-            (phase == FloorPhase.Unloading
-                ? CountPendingExits()
-                : 0) +
-            "\nSCORE: " + score;
-
-        GUI.Box(
-            new Rect(15, 15, 455, 145),
-            GUIContent.none
+        float width = Mathf.Min(
+            340f,
+            Mathf.Max(180f, Screen.width - 24f)
         );
 
-        GUI.Label(
-            new Rect(28, 22, 430, 135),
-            text,
-            phaseStyle
-        );
+        float x = Screen.width - width - 12f;
+
+        // COMBO indicator.
+        if (comboCount > 0)
+        {
+            Rect comboRect = new Rect(
+                x,
+                14f,
+                width,
+                52f
+            );
+
+            GUI.color = new Color(
+                0.05f, 0.07f, 0.09f, 0.85f
+            );
+
+            GUI.DrawTexture(
+                comboRect,
+                Texture2D.whiteTexture
+            );
+
+            GUI.color = new Color(
+                1f, 0.85f, 0.35f
+            );
+
+            GUI.Label(
+                comboRect,
+                "COMBO x" + comboCount,
+                comboStyle
+            );
+        }
+
+        // Floating score messages.
+        for (int i = 0; i < scorePopups.Count; i++)
+        {
+            ScorePopup popup = scorePopups[i];
+
+            float age =
+                Time.unscaledTime - popup.createdAt;
+
+            float progress = Mathf.Clamp01(
+                age / Mathf.Max(
+                    0.5f, feedbackDuration
+                )
+            );
+
+            float alpha = 1f - progress;
+
+            float y =
+                Screen.height -
+                24f -
+                (scorePopups.Count - i) * 48f -
+                progress * 18f;
+
+            Rect popupRect = new Rect(
+                x,
+                y,
+                width,
+                42f
+            );
+
+            // Dark background.
+            GUI.color = new Color(
+                0.02f,
+                0.025f,
+                0.035f,
+                0.78f * alpha
+            );
+
+            GUI.DrawTexture(
+                popupRect,
+                Texture2D.whiteTexture
+            );
+
+            // Colored message.
+            GUI.color = new Color(
+                popup.color.r,
+                popup.color.g,
+                popup.color.b,
+                alpha
+            );
+
+            GUI.Label(
+                popupRect,
+                popup.message,
+                scoreStyle
+            );
+        }
+
+        GUI.color = previousColor;
+        GUI.depth = previousDepth;
+    }
+
+    // =====================================
+    // TEMPORARY PHASE HUD
+    // =====================================
+
+    private void OnGUI()
+    {
+        if (finished || countdown == null)
+        {
+            return;
+        }
+
+        EnsureGUIStyles();
+
+        if (showPhaseOverlay)
+        {
+            if (phaseBannerActive)
+            {
+                int secondsLeft = Mathf.Max(
+                    0,
+                    Mathf.CeilToInt(
+                        phaseBannerEndTime -
+                        Time.realtimeSinceStartup
+                    )
+                );
+
+                float width = 520f;
+                float height = 180f;
+
+                Rect panel = new Rect(
+                    (Screen.width - width) * 0.5f,
+                    (Screen.height - height) * 0.35f,
+                    width,
+                    height
+                );
+
+                GUI.Box(
+                    panel,
+                    GUIContent.none
+                );
+
+                GUI.Label(
+                    panel,
+                    phaseBannerText +
+                    "\n\n" +
+                    secondsLeft + "s",
+                    bannerStyle
+                );
+            }
+            else
+            {
+                string phaseName;
+
+                if (transitioning)
+                {
+                    phaseName =
+                        "MOVING / CHANGING PHASE";
+                }
+                else if (phase == FloorPhase.Boarding)
+                {
+                    phaseName =
+                        "BOARDING - LOAD NPCs";
+                }
+                else if (!unloadHasTargets)
+                {
+                    phaseName =
+                        "UNLOADING - NO ONE TO EXIT";
+                }
+                else
+                {
+                    phaseName =
+                        "UNLOADING - TAKE NPCs OUT";
+                }
+
+                string timeText = transitioning
+                    ? "--"
+                    : Mathf.CeilToInt(
+                        countdown.RemainingTime
+                    ).ToString();
+
+                string text =
+                    "FLOOR " + CurrentFloor + " / 7\n" +
+                    phaseName + "\n" +
+                    "TIME: " + timeText + "s" +
+                    "    EXIT LEFT: " +
+                    (phase == FloorPhase.Unloading
+                        ? CountPendingExits()
+                        : 0) +
+                    "\nSCORE: " + score;
+
+                GUI.Box(
+                    new Rect(15, 15, 455, 145),
+                    GUIContent.none
+                );
+
+                GUI.Label(
+                    new Rect(28, 22, 430, 135),
+                    text,
+                    phaseStyle
+                );
+            }
+        }
+
+        // Score feedback is independent
+        // from the temporary phase HUD.
+        DrawScoreFeedback();
     }
 
     // =====================================
@@ -1349,7 +1638,8 @@ public class FloorProgressionManager : MonoBehaviour
                 "SCORE: " + score + "\n" +
                 "BOARDED: " + boardedCount + "\n" +
                 "DELIVERED: " + deliveredCount + "\n" +
-                "MISSED: " + missedCount;
+                "MISSED: " + missedCount + "\n" +
+                "MAX COMBO: x" + maxCombo;
         }
 
         if (finishPanel != null)
@@ -1359,7 +1649,8 @@ public class FloorProgressionManager : MonoBehaviour
 
         Debug.Log(
             "Game Complete | Score: " +
-            score
+            score + " | Max Combo: x" +
+            maxCombo
         );
     }
 }
