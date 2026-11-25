@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -28,6 +29,10 @@ public class ElevatorEnding : MonoBehaviour
     [Tooltip("Delay after NPCs are launched before the ending sound plays.")]
     [Min(0f)]
     [SerializeField] private float endingSoundDelay = 0f;
+
+    [Tooltip("Start playing the audio clip from this second.")]
+    [Min(0f)]
+    [SerializeField] private float endingSoundStartTime = 1f;
 
     [Range(0f, 1f)]
     [SerializeField] private float endingSoundVolume = 1f;
@@ -67,11 +72,8 @@ public class ElevatorEnding : MonoBehaviour
     private class RagdollNPC
     {
         public NPCQueueAgent agent;
-
         public Rigidbody pelvis;
-
         public Vector3 pelvisOffset;
-
         public bool fallback;
 
         public readonly List<RagdollPart> parts =
@@ -192,11 +194,15 @@ public class ElevatorEnding : MonoBehaviour
             " full physics passengers."
         );
 
-        // Play the sound after the ragdolls launch.
-        // The delay is adjustable in the Inspector.
-        float totalFinishDelay = Mathf.Max(1f, finishDelay);
+        // =================================
+        // UPDATED: ENDING SOUND TIMING
+        // =================================
 
-        if (endingAudioSource != null && endingSound != null)
+        float totalFinishDelay =
+            Mathf.Max(1f, finishDelay);
+
+        if (endingAudioSource != null &&
+            endingSound != null)
         {
             float soundDelay = Mathf.Clamp(
                 endingSoundDelay,
@@ -205,22 +211,32 @@ public class ElevatorEnding : MonoBehaviour
             );
 
             if (soundDelay > 0f)
-                yield return new WaitForSeconds(soundDelay);
+            {
+                yield return new WaitForSeconds(
+                    soundDelay
+                );
+            }
 
-            endingAudioSource.PlayOneShot(
-                endingSound,
-                endingSoundVolume
-            );
+            // Play from the selected audio start time.
+            PlayEndingSound();
 
-            // Keep the original total finish timing unchanged.
-            float remainingDelay = totalFinishDelay - soundDelay;
+            // Keep the original total finish timing.
+
+            float remainingDelay =
+                totalFinishDelay - soundDelay;
 
             if (remainingDelay > 0f)
-                yield return new WaitForSeconds(remainingDelay);
+            {
+                yield return new WaitForSeconds(
+                    remainingDelay
+                );
+            }
         }
         else
         {
-            yield return new WaitForSeconds(totalFinishDelay);
+            yield return new WaitForSeconds(
+                totalFinishDelay
+            );
         }
 
         // No scripted destination.
@@ -230,6 +246,52 @@ public class ElevatorEnding : MonoBehaviour
         SyncRagdollVisuals();
 
         Physics.SyncTransforms();
+    }
+
+    // =====================================
+    // NEW: PLAY SOUND FROM SELECTED TIME
+    // =====================================
+
+    private void PlayEndingSound()
+    {
+        if (endingAudioSource == null ||
+            endingSound == null)
+        {
+            return;
+        }
+
+        endingAudioSource.Stop();
+
+        endingAudioSource.clip = endingSound;
+        endingAudioSource.loop = false;
+
+        // Preserve the original AudioSource volume
+        // multiplied by the ending sound volume.
+
+        endingAudioSource.volume *=
+            Mathf.Clamp01(endingSoundVolume);
+
+        // Convert the selected start time into
+        // an audio sample position.
+
+        int startSample = Mathf.Clamp(
+            Mathf.RoundToInt(
+                Mathf.Max(0f, endingSoundStartTime) *
+                endingSound.frequency
+            ),
+            0,
+            Mathf.Max(0, endingSound.samples - 1)
+        );
+
+        endingAudioSource.timeSamples = startSample;
+
+        endingAudioSource.Play();
+
+        Debug.Log(
+            "[ENDING SOUND] Playing from " +
+            endingSoundStartTime.ToString("F2") +
+            " seconds."
+        );
     }
 
     // =====================================
@@ -281,7 +343,6 @@ public class ElevatorEnding : MonoBehaviour
             agent.GetComponentInChildren<Animator>(true);
 
         // Stop normal character scripts.
-        // Only affects this NPC during the ending.
 
         foreach (MonoBehaviour behaviour in
                  agent.GetComponentsInChildren<MonoBehaviour>(true))
@@ -307,7 +368,7 @@ public class ElevatorEnding : MonoBehaviour
             c.enabled = false;
         }
 
-        // Disable any old physical bodies.
+        // Disable old physical bodies.
 
         foreach (Rigidbody rb in
                  agent.GetComponentsInChildren<Rigidbody>(true))
@@ -323,8 +384,6 @@ public class ElevatorEnding : MonoBehaviour
         }
 
         Transform root = agent.transform;
-
-        // Find the actual skeleton.
 
         Transform hips = GetBone(
             animator,
@@ -363,7 +422,6 @@ public class ElevatorEnding : MonoBehaviour
         };
 
         // Fallback for models without usable bones.
-        // Still uses real physics instead of animation.
 
         if (hips == null ||
             chest == null ||
@@ -388,9 +446,7 @@ public class ElevatorEnding : MonoBehaviour
         ragdoll.pelvisOffset =
             hips.position - root.position;
 
-        // =================================
         // PELVIS
-        // =================================
 
         RagdollPart pelvisPart = AddPart(
             ragdoll,
@@ -403,9 +459,7 @@ public class ElevatorEnding : MonoBehaviour
 
         ragdoll.pelvis = pelvisPart.body;
 
-        // =================================
         // CHEST
-        // =================================
 
         RagdollPart chestPart = AddPart(
             ragdoll,
@@ -416,9 +470,7 @@ public class ElevatorEnding : MonoBehaviour
             4f
         );
 
-        // =================================
         // HEAD
-        // =================================
 
         AddPart(
             ragdoll,
@@ -429,9 +481,7 @@ public class ElevatorEnding : MonoBehaviour
             2f
         );
 
-        // =================================
         // LEFT ARM
-        // =================================
 
         AddArm(
             ragdoll,
@@ -442,9 +492,7 @@ public class ElevatorEnding : MonoBehaviour
             height
         );
 
-        // =================================
         // RIGHT ARM
-        // =================================
 
         AddArm(
             ragdoll,
@@ -455,9 +503,7 @@ public class ElevatorEnding : MonoBehaviour
             height
         );
 
-        // =================================
         // LEFT LEG
-        // =================================
 
         AddLeg(
             ragdoll,
@@ -468,9 +514,7 @@ public class ElevatorEnding : MonoBehaviour
             height
         );
 
-        // =================================
         // RIGHT LEG
-        // =================================
 
         AddLeg(
             ragdoll,
@@ -480,15 +524,8 @@ public class ElevatorEnding : MonoBehaviour
             false,
             height
         );
-
-        // Prevent a ragdoll from exploding because
-        // its own colliders overlap.
-        //
-        // Different NPCs can still hit each other.
 
         IgnoreSelfCollisions(ragdoll);
-
-        // Sync parent bones before child bones.
 
         ragdoll.parts.Sort(
             (a, b) =>
@@ -695,7 +732,8 @@ public class ElevatorEnding : MonoBehaviour
             bone.rotation
         );
 
-        Rigidbody body = obj.AddComponent<Rigidbody>();
+        Rigidbody body =
+            obj.AddComponent<Rigidbody>();
 
         ConfigureBody(body, mass);
 
@@ -715,7 +753,8 @@ public class ElevatorEnding : MonoBehaviour
             Vector3 difference =
                 nextBone.position - bone.position;
 
-            GameObject shape = new GameObject("Collider");
+            GameObject shape =
+                new GameObject("Collider");
 
             shape.layer = ragdollLayer;
 
@@ -890,16 +929,10 @@ public class ElevatorEnding : MonoBehaviour
             right * sideways +
             Vector3.up * upward;
 
-        // Activate every physical body first.
-
         foreach (RagdollPart part in ragdoll.parts)
         {
             part.body.isKinematic = false;
         }
-
-        // Apply real physical impulses.
-        // The physics engine controls movement
-        // from this point onward.
 
         foreach (RagdollPart part in ragdoll.parts)
         {
@@ -910,8 +943,6 @@ public class ElevatorEnding : MonoBehaviour
 
             part.body.WakeUp();
         }
-
-        // Random violent spin.
 
         if (ragdoll.pelvis != null)
         {
@@ -925,8 +956,6 @@ public class ElevatorEnding : MonoBehaviour
             );
         }
 
-        // Add random limb reactions.
-
         foreach (RagdollPart part in ragdoll.parts)
         {
             if (part.body == ragdoll.pelvis)
@@ -934,7 +963,10 @@ public class ElevatorEnding : MonoBehaviour
 
             part.body.AddTorque(
                 Random.onUnitSphere *
-                Random.Range(1f, spinForce * 0.6f),
+                Random.Range(
+                    1f,
+                    spinForce * 0.6f
+                ),
                 ForceMode.VelocityChange
             );
         }
@@ -1005,15 +1037,9 @@ public class ElevatorEnding : MonoBehaviour
                 continue;
             }
 
-            // Keep the NPC root near the physical pelvis
-            // for the existing scoring system.
-
             root.position =
                 ragdoll.pelvis.transform.position -
                 ragdoll.pelvisOffset;
-
-            // Copy the actual physics pose.
-            // There is no standing or landing animation.
 
             foreach (RagdollPart part in ragdoll.parts)
             {

@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/TheElevatorLobby/Scenes/mn.unity
     guid: 4af89e7760689a64a870c50ba9608d83
   - enabled: 1
+    path: Assets/TheElevatorLobby/Scenes/tt.unity
+    guid: c08843dbe78f26b4ea04788652055e0f
+  - enabled: 1
     path: Assets/TheElevatorLobby/Scenes/Elevator_Lobby_Main.unity
     guid: 26afb163d0b78f44bb37f442944d838b
   - enabled: 0

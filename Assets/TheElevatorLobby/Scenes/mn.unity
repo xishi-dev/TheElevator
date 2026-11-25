@@ -906,7 +906,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6cb000be407598488b3b7fa6385ad35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenu
-  gameSceneName: Elevator_Lobby_Main
+  gameSceneName: tt
 --- !u!4 &392515020
 Transform:
   m_ObjectHideFlags: 0

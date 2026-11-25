@@ -41615,7 +41615,8 @@ MonoBehaviour:
   finishDelay: 6
   endingAudioSource: {fileID: 175595881}
   endingSound: {fileID: 8300000, guid: 44bedd6836b8f924fa1db437f4f1cb3e, type: 3}
-  endingSoundDelay: 0.5
+  endingSoundDelay: 0
+  endingSoundStartTime: 1
   endingSoundVolume: 1
   minLaunchForce: 10
   maxLaunchForce: 17
@@ -446649,31 +446650,31 @@ MonoBehaviour:
     doorController: {fileID: 14587096}
     spawnPoint: {fileID: 1864729617}
     queueStart: {fileID: 55384069}
-    roundSeconds: 1
+    roundSeconds: 15
   - floorName: Floor_02
     stopPoint: {fileID: 715722307}
     doorController: {fileID: 1453128125}
     spawnPoint: {fileID: 103448503}
     queueStart: {fileID: 581495557}
-    roundSeconds: 1
+    roundSeconds: 15
   - floorName: Floor_03
     stopPoint: {fileID: 475508450}
     doorController: {fileID: 36836346}
     spawnPoint: {fileID: 4485846}
     queueStart: {fileID: 490457349}
-    roundSeconds: 1
+    roundSeconds: 15
   - floorName: Floor_04
     stopPoint: {fileID: 822521320}
     doorController: {fileID: 339224938}
     spawnPoint: {fileID: 691624082}
     queueStart: {fileID: 516705092}
-    roundSeconds: 1
+    roundSeconds: 10
   - floorName: Floor_05
     stopPoint: {fileID: 860491697}
     doorController: {fileID: 109187845}
     spawnPoint: {fileID: 11774525}
     queueStart: {fileID: 27701761}
-    roundSeconds: 1
+    roundSeconds: 10
   - floorName: Floor_06
     stopPoint: {fileID: 1967262539}
     doorController: {fileID: 100724350}
@@ -446685,7 +446686,7 @@ MonoBehaviour:
     doorController: {fileID: 1179749258}
     spawnPoint: {fileID: 544484357}
     queueStart: {fileID: 320086530}
-    roundSeconds: 10
+    roundSeconds: 15
   countdown: {fileID: 359602532}
   cameraSwitcher: {fileID: 1821910198}
   grabController: {fileID: 538871562}
@@ -446696,7 +446697,7 @@ MonoBehaviour:
   travelDuration: 5
   fadeDuration: 0.4
   blackFade: {fileID: 640195640}
-  unloadSeconds: 5
+  unloadSeconds: 10
   noExitSeconds: 3
   exitChance: 0.2
   deliveryExitClearance: 0.12
