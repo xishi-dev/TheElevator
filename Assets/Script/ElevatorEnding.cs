@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -21,6 +20,17 @@ public class ElevatorEnding : MonoBehaviour
 
     [Min(1f)]
     [SerializeField] private float finishDelay = 6f;
+
+    [Header("Ending Sound")]
+    [SerializeField] private AudioSource endingAudioSource;
+    [SerializeField] private AudioClip endingSound;
+
+    [Tooltip("Delay after NPCs are launched before the ending sound plays.")]
+    [Min(0f)]
+    [SerializeField] private float endingSoundDelay = 0f;
+
+    [Range(0f, 1f)]
+    [SerializeField] private float endingSoundVolume = 1f;
 
     [Header("EXPLOSIVE FORCE")]
     [SerializeField] private float minLaunchForce = 10f;
@@ -182,13 +192,40 @@ public class ElevatorEnding : MonoBehaviour
             " full physics passengers."
         );
 
+        // Play the sound after the ragdolls launch.
+        // The delay is adjustable in the Inspector.
+        float totalFinishDelay = Mathf.Max(1f, finishDelay);
+
+        if (endingAudioSource != null && endingSound != null)
+        {
+            float soundDelay = Mathf.Clamp(
+                endingSoundDelay,
+                0f,
+                totalFinishDelay
+            );
+
+            if (soundDelay > 0f)
+                yield return new WaitForSeconds(soundDelay);
+
+            endingAudioSource.PlayOneShot(
+                endingSound,
+                endingSoundVolume
+            );
+
+            // Keep the original total finish timing unchanged.
+            float remainingDelay = totalFinishDelay - soundDelay;
+
+            if (remainingDelay > 0f)
+                yield return new WaitForSeconds(remainingDelay);
+        }
+        else
+        {
+            yield return new WaitForSeconds(totalFinishDelay);
+        }
+
         // No scripted destination.
         // No scripted landing.
         // Let physics do everything.
-
-        yield return new WaitForSeconds(
-            Mathf.Max(1f, finishDelay)
-        );
 
         SyncRagdollVisuals();
 

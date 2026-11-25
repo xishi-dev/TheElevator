@@ -106,6 +106,12 @@ public class FloorProgressionManager : MonoBehaviour
 
     private int floorIndex;
     private int score;
+
+    // Score breakdown for GameResultUI.
+    private int mainScore;
+    private int bonusScore;
+    private int penaltyScore;
+
     private int boardedCount;
     private int deliveredCount;
     private int missedCount;
@@ -189,6 +195,9 @@ public class FloorProgressionManager : MonoBehaviour
 
         floorIndex = 0;
         score = 0;
+        mainScore = 0;
+        bonusScore = 0;
+        penaltyScore = 0;
         boardedCount = 0;
         deliveredCount = 0;
         missedCount = 0;
@@ -441,6 +450,7 @@ public class FloorProgressionManager : MonoBehaviour
 
                     boardedCount++;
                     score += boardingPoints;
+                    mainScore += boardingPoints;
 
                     AddScoreFeedback(
                         "+" + boardingPoints + " BOARDING",
@@ -477,6 +487,8 @@ public class FloorProgressionManager : MonoBehaviour
                         unloadingPoints + comboBonus;
 
                     score += earnedPoints;
+                    mainScore += unloadingPoints;
+                    bonusScore += comboBonus;
 
                     string popupText =
                         "+" + earnedPoints + " EXIT";
@@ -738,6 +750,7 @@ public class FloorProgressionManager : MonoBehaviour
             int penalty = CalculateMissPenalty(status);
 
             score -= penalty;
+            penaltyScore += penalty;
 
             missedCount++;
             missedThisFloor++;
@@ -1737,29 +1750,18 @@ public class FloorProgressionManager : MonoBehaviour
                 "MAX COMBO: x" + maxCombo;
         }
 
-        // Show the custom Result UI created in the Canvas.
-        // Keep the old finish panel as a fallback if no Result UI is assigned.
         if (gameResultUI != null)
         {
-            if (finishPanel != null)
-                finishPanel.SetActive(false);
-
-            gameResultUI.ShowResult(score);
+            gameResultUI.ShowResult(
+                mainScore,
+                bonusScore,
+                penaltyScore
+            );
         }
         else if (finishPanel != null)
         {
+            // Backward-compatible fallback if GameResultUI is not assigned.
             finishPanel.SetActive(true);
-            Debug.LogWarning(
-                "GameResultUI is not assigned. Showing the legacy finish panel instead.",
-                this
-            );
-        }
-        else
-        {
-            Debug.LogError(
-                "No GameResultUI or legacy finishPanel is assigned.",
-                this
-            );
         }
 
         Debug.Log(

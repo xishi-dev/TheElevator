@@ -14,14 +14,27 @@ public class GameResultUI : MonoBehaviour
 
     private void Start()
     {
-        resultPanel.SetActive(false);
+        if (resultPanel != null)
+            resultPanel.SetActive(false);
     }
 
-    // เรียกใช้เมื่อจบชั้น 7
-    public void ShowResult(int score)
+    // แสดงผลคะแนนทั้งหมด
+    public void ShowResult(int mainScore, int bonusScore, int penaltyScore)
     {
-        resultPanel.SetActive(true);
-        scoreText.text = "YOUR SCORE: " + score;
+        if (resultPanel != null)
+            resultPanel.SetActive(true);
+
+        int totalScore = mainScore + bonusScore - penaltyScore;
+
+        if (scoreText != null)
+        {
+            scoreText.text =
+                "GAME COMPLETE!\n\n" +
+                "MAIN SCORE: " + mainScore.ToString("N0") + "\n" +
+                "BONUS SCORE: +" + bonusScore.ToString("N0") + "\n" +
+                "PENALTY SCORE: -" + penaltyScore.ToString("N0") + "\n\n" +
+                "TOTAL SCORE: " + totalScore.ToString("N0");
+        }
 
         Time.timeScale = 0f;
     }
@@ -34,5 +47,12 @@ public class GameResultUI : MonoBehaviour
         SceneManager.LoadScene(
             SceneManager.GetActiveScene().buildIndex
         );
+    }
+
+    // กลับหน้าเมนู
+    public void MainMenu()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(mainMenuSceneName);
     }
 }

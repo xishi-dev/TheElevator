@@ -41588,6 +41588,7 @@ GameObject:
   m_Component:
   - component: {fileID: 175595880}
   - component: {fileID: 175595879}
+  - component: {fileID: 175595881}
   m_Layer: 0
   m_Name: EndingManager
   m_TagString: Untagged
@@ -41612,6 +41613,10 @@ MonoBehaviour:
   outsidePoint: {fileID: 1064600148}
   doorWait: 0.5
   finishDelay: 6
+  endingAudioSource: {fileID: 175595881}
+  endingSound: {fileID: 8300000, guid: 44bedd6836b8f924fa1db437f4f1cb3e, type: 3}
+  endingSoundDelay: 0.5
+  endingSoundVolume: 1
   minLaunchForce: 10
   maxLaunchForce: 17
   sideForce: 4.5
@@ -41638,6 +41643,103 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2091825102}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!82 &175595881
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 175595878}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &175988124
 GameObject:
   m_ObjectHideFlags: 0
@@ -197066,7 +197168,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 27.804, y: -67.03099}
+  m_AnchoredPosition: {x: 218.00702, y: -43}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &818087946
@@ -291877,7 +291979,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 17, y: 203}
+  m_AnchoredPosition: {x: -198, y: 203}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1244405511
@@ -437117,7 +437219,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 27.797, y: 74}
+  m_AnchoredPosition: {x: 218, y: 93}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1856718869
@@ -446547,31 +446649,31 @@ MonoBehaviour:
     doorController: {fileID: 14587096}
     spawnPoint: {fileID: 1864729617}
     queueStart: {fileID: 55384069}
-    roundSeconds: 15
+    roundSeconds: 1
   - floorName: Floor_02
     stopPoint: {fileID: 715722307}
     doorController: {fileID: 1453128125}
     spawnPoint: {fileID: 103448503}
     queueStart: {fileID: 581495557}
-    roundSeconds: 15
+    roundSeconds: 1
   - floorName: Floor_03
     stopPoint: {fileID: 475508450}
     doorController: {fileID: 36836346}
     spawnPoint: {fileID: 4485846}
     queueStart: {fileID: 490457349}
-    roundSeconds: 15
+    roundSeconds: 1
   - floorName: Floor_04
     stopPoint: {fileID: 822521320}
     doorController: {fileID: 339224938}
     spawnPoint: {fileID: 691624082}
     queueStart: {fileID: 516705092}
-    roundSeconds: 10
+    roundSeconds: 1
   - floorName: Floor_05
     stopPoint: {fileID: 860491697}
     doorController: {fileID: 109187845}
     spawnPoint: {fileID: 11774525}
     queueStart: {fileID: 27701761}
-    roundSeconds: 10
+    roundSeconds: 1
   - floorName: Floor_06
     stopPoint: {fileID: 1967262539}
     doorController: {fileID: 100724350}
@@ -446594,7 +446696,7 @@ MonoBehaviour:
   travelDuration: 5
   fadeDuration: 0.4
   blackFade: {fileID: 640195640}
-  unloadSeconds: 10
+  unloadSeconds: 5
   noExitSeconds: 3
   exitChance: 0.2
   deliveryExitClearance: 0.12
