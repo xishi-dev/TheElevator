@@ -35,12 +35,4 @@ public class GameResultUI : MonoBehaviour
             SceneManager.GetActiveScene().buildIndex
         );
     }
-
-    // กลับหน้าเมนู
-    public void MainMenu()
-    {
-        Time.timeScale = 1f;
-
-        SceneManager.LoadScene(mainMenuSceneName);
-    }
 }
